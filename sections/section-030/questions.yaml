@@ -1,0 +1,111 @@
+schema_version: 1
+kind: question_bank
+id: ats023-section-030
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-030
+  title: Monitor cluster and application resource usage
+placement:
+  position: after
+  reading: sections/section-030/module-01/course-03-summary.md
+questions:
+- id: ats023-section-030-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Confirm observation context and permissions.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: A correct-looking diagnostic result comes from another cluster context. What does it establish
+    about the intended workload?
+  options:
+  - id: a
+    text: Nothing without confirming the observation scope
+    explanation: The right format does not make the wrong cluster's evidence relevant.
+  - id: b
+    text: That the intended workload has the same state
+    explanation: Different clusters can contain similarly named but independent objects.
+  - id: c
+    text: That every namespace shares one application instance
+    explanation: Resource identity and namespace scope distinguish objects.
+  correct_option: a
+  explanation: The right format does not make the wrong cluster's evidence relevant.
+- id: ats023-section-030-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Compare specification, status, events and metrics.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: A Deployment declares three replicas but reports one available replica. Which distinction matters?
+  options:
+  - id: a
+    text: A YAML file versus an image layer
+    explanation: Those categories do not explain the stated count distinction.
+  - id: b
+    text: A Service name versus a chart name
+    explanation: Naming does not establish replica availability.
+  - id: c
+    text: Desired specification versus observed status
+    explanation: The requested count and usable observed capacity are separate facts.
+  correct_option: c
+  explanation: The requested count and usable observed capacity are separate facts.
+- id: ats023-section-030-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Compare specification, status, events and metrics.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: No old event is visible for a previous failure. What should be concluded?
+  options:
+  - id: a
+    text: The Deployment history is automatically corrupted
+    explanation: Missing old events do not establish corrupted rollout history.
+  - id: b
+    text: The available event history is incomplete evidence
+    explanation: Events are temporary and absence does not prove the condition never happened.
+  - id: c
+    text: The failure could not have happened
+    explanation: Event retention does not provide that proof.
+  correct_option: b
+  explanation: Events are temporary and absence does not prove the condition never happened.
+- id: ats023-section-030-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Compare specification, status, events and metrics.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: The top command cannot obtain metrics while Pods run normally. Which dependency should be checked?
+  options:
+  - id: a
+    text: The available metrics API and access to it
+    explanation: Usage reporting needs a supported metrics service and permission.
+  - id: b
+    text: Only the application HTML title
+    explanation: The page title does not supply cluster resource metrics.
+  - id: c
+    text: Only the ConfigMap's number of keys
+    explanation: Configuration key count does not establish the metrics interface.
+  correct_option: a
+  explanation: Usage reporting needs a supported metrics service and permission.
+- id: ats023-section-030-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Compare specification, status, events and metrics.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: A Pod has not yet started because image retrieval fails. Which evidence is most useful first?
+  options:
+  - id: a
+    text: Only the application's request logs
+    explanation: A process that never started cannot emit the intended runtime records.
+  - id: b
+    text: Only a browser's cached response
+    explanation: Cached content does not diagnose node image preparation.
+  - id: c
+    text: Waiting reasons and preparation events
+    explanation: Application logs may not exist before the process starts.
+  correct_option: c
+  explanation: Application logs may not exist before the process starts.

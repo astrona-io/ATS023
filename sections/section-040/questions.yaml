@@ -1,0 +1,112 @@
+schema_version: 1
+kind: question_bank
+id: ats023-section-040
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-040
+  title: Manage and evaluate container output streams
+placement:
+  position: after
+  reading: sections/section-040/module-01/course-03-summary.md
+questions:
+- id: ats023-section-040-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain standard output and supported log retrieval.
+  source_readings:
+  - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+  prompt: An application writes only to an internal file. What should be assumed about ordinary container
+    logs?
+  options:
+  - id: a
+    text: They may not contain those file records
+    explanation: The standard process-output path does not automatically collect every internal file.
+  - id: b
+    text: They always contain every image file modification
+    explanation: Container logging is not a universal filesystem audit.
+  - id: c
+    text: They automatically create a shared volume
+    explanation: Log retrieval does not declare volume sharing.
+  correct_option: a
+  explanation: The standard process-output path does not automatically collect every internal file.
+- id: ats023-section-040-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Select container, instance and observation window.
+  source_readings:
+  - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+  prompt: The current instance shows only startup messages after a crash. Which stream may explain the
+    earlier failure?
+  options:
+  - id: a
+    text: An unrelated helper's current stream
+    explanation: Different containers have different responsibilities and evidence.
+  - id: b
+    text: The Service's selector text
+    explanation: Routing configuration is not the failed process's output stream.
+  - id: c
+    text: The previous terminated container instance's available logs
+    explanation: Previous-instance retrieval can provide retained evidence for the preceding attempt.
+  correct_option: c
+  explanation: Previous-instance retrieval can provide retained evidence for the preceding attempt.
+- id: ats023-section-040-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Select container, instance and observation window.
+  source_readings:
+  - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+  prompt: A Deployment replaces a Pod. Is old-Pod log access guaranteed indefinitely?
+  options:
+  - id: a
+    text: Yes; the image digest stores execution logs
+    explanation: Artifact identity is distinct from runtime evidence retention.
+  - id: b
+    text: No; object, node and retention lifecycles affect availability
+    explanation: Long-term evidence needs an explicit retention design.
+  - id: c
+    text: Yes; every replacement copies all old logs into its new container
+    explanation: The replacement does not universally inherit those records.
+  correct_option: b
+  explanation: Long-term evidence needs an explicit retention design.
+- id: ats023-section-040-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Select container, instance and observation window.
+  source_readings:
+  - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+  prompt: Old and new release Pods coexist. What helps avoid misattributing an error?
+  options:
+  - id: a
+    text: Record identity and version for the emitting Pod or container
+    explanation: A combined stream needs attribution to distinguish releases.
+  - id: b
+    text: Assume every line comes from the newest image
+    explanation: Coexistence means either version can emit records.
+  - id: c
+    text: Sort only by the length of each line
+    explanation: Line length does not identify the workload version.
+  correct_option: a
+  explanation: A combined stream needs attribution to distinguish releases.
+- id: ats023-section-040-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Interpret restart and termination evidence.
+  source_readings:
+  - sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
+  prompt: A container exits repeatedly. Why examine termination state as well as logs?
+  options:
+  - id: a
+    text: Termination state always proves the full application cause
+    explanation: It still needs interpretation with other evidence.
+  - id: b
+    text: Logs can never describe failures
+    explanation: Logs can be useful but are not the only evidence.
+  - id: c
+    text: It can identify lifecycle evidence missing from application text
+    explanation: Exit reasons and logs contribute different observations.
+  correct_option: c
+  explanation: Exit reasons and logs contribute different observations.

@@ -1,0 +1,112 @@
+schema_version: 1
+kind: question_bank
+id: ats023-section-010
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-010
+  title: Troubleshoot clusters and nodes
+placement:
+  position: after
+  reading: sections/section-010/module-01/course-03-summary.md
+questions:
+- id: ats023-section-010-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish unready, unschedulable and stale reporting.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A node is deliberately cordoned but reports healthy conditions. Which interpretation fits?
+  options:
+  - id: a
+    text: It is unschedulable for normal new placements without necessarily being unready
+    explanation: Maintenance eligibility and node health are different states.
+  - id: b
+    text: It must have lost datastore quorum
+    explanation: A cordon does not prove datastore failure.
+  - id: c
+    text: Every existing container must already be terminated
+    explanation: Cordoning does not itself evict current workloads.
+  correct_option: a
+  explanation: Maintenance eligibility and node health are different states.
+- id: ats023-section-010-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish unready, unschedulable and stale reporting.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A node stops sending fresh reports. Why distinguish that from a fresh failing condition?
+  options:
+  - id: a
+    text: All stale reports prove the network plugin crashed
+    explanation: The cause must be located with additional evidence.
+  - id: b
+    text: A stale report proves every container has stopped
+    explanation: Some containers can continue while management communication fails.
+  - id: c
+    text: Stale observation and reported subsystem failure support different hypotheses
+    explanation: Reporting loss can concern communication or agent operation rather than one stated current
+      condition.
+  correct_option: c
+  explanation: Reporting loss can concern communication or agent operation rather than one stated current
+    condition.
+- id: ats023-section-010-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Trace kubelet and runtime dependencies.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: The kubelet runs but cannot connect to its runtime socket. Which dependency matters?
+  options:
+  - id: a
+    text: Only the Ingress certificate
+    explanation: External TLS is distinct from the local runtime connection.
+  - id: b
+    text: The runtime service and configured CRI endpoint
+    explanation: The local agent needs a usable execution interface.
+  - id: c
+    text: Only the application's Service labels
+    explanation: Routing labels do not provide the runtime socket.
+  correct_option: b
+  explanation: The local agent needs a usable execution interface.
+- id: ats023-section-010-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Interpret pressure, trust and connectivity evidence.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A node has free space on one disk but image storage is full. What should be compared?
+  options:
+  - id: a
+    text: Pressure observations with the actual image-storage filesystem
+    explanation: Capacity on an unrelated path does not repair the exhausted storage.
+  - id: b
+    text: Only total desired application replicas
+    explanation: Replica intent does not identify the full filesystem.
+  - id: c
+    text: Only whether the API resource name is plural
+    explanation: API spelling does not resolve disk pressure.
+  correct_option: a
+  explanation: Capacity on an unrelated path does not repair the exhausted storage.
+- id: ats023-section-010-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Verify restored node responsibility without undoing intended policy.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A repaired kubelet process starts. What additional verification is useful?
+  options:
+  - id: a
+    text: Only a saved configuration filename
+    explanation: A saved file does not establish current behavior.
+  - id: b
+    text: Assuming every prior condition is immediately and universally cleared
+    explanation: Dependent state and reporting can require further observation.
+  - id: c
+    text: Fresh node readiness and the relevant workload responsibility
+    explanation: Process existence does not prove dependent operations recovered.
+  correct_option: c
+  explanation: Process existence does not prove dependent operations recovered.
