@@ -2,7 +2,7 @@
 
 Exam: Certified Kubernetes Administrator (CKA). Domain: Troubleshooting (30%).
 
-The [official objectives](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/) were verified on 2026-10-11. Teaching structure is original; it does not add official exam requirements.
+The [official objectives](https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/) were verified on 2026-10-11. Teaching structure is original; it does not add official exam requirements.
 
 | Section | Official objective | Modules |
 | --- | --- | --- |
