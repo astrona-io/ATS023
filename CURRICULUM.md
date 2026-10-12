@@ -1,26 +1,25 @@
-# Curriculum And Authoring Plan
+# Curriculum Coverage
 
 Exam: Certified Kubernetes Administrator (CKA). Domain: Troubleshooting (30%).
-Source: [official curriculum](https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/), checked 2026-10-10.
-Objectives are attributed to The Linux Foundation and CNCF.
 
-Preparation scaffold; content authoring has not started.
+The [official objectives](https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/) were verified on 2026-10-11. Teaching structure is original; it does not add official exam requirements.
 
-| Section | Official objective | Authoring status |
+| Section | Official objective | Modules |
 | --- | --- | --- |
-| 010 | Troubleshoot clusters and nodes | Planned |
-| 020 | Troubleshoot cluster components | Planned |
-| 030 | Monitor cluster and application resource usage | Planned |
-| 040 | Manage and evaluate container output streams | Planned |
-| 050 | Troubleshoot services and networking | Planned |
+| 010 | Troubleshoot clusters and nodes | 1 |
+| 020 | Troubleshoot cluster components | 1 |
+| 030 | Monitor cluster and application resource usage | 1 |
+| 040 | Manage and evaluate container output streams | 1 |
+| 050 | Troubleshoot services and networking | 1 |
 
-Before building content:
+| Section / module | Module | Teaching lessons |
+| --- | --- | --- |
+| 010 / 01 | Node Conditions And Host Diagnosis | Diagnosing Node Readiness And Host Dependencies; Node Health And Shared Dependencies |
+| 020 / 01 | Control-Plane Responsibility And Failure Scope | Control Plane And Worker Responsibilities; Locating A Control-Plane Component Failure |
+| 030 / 01 | Resource Observations And Capacity Diagnosis | Choosing Diagnostic Evidence With kubectl; Expressing Resource Needs For Every Container |
+| 040 / 01 | Output Streams And Runtime Failure Evidence | Selecting The Right Container Log And Time Window; Logs, Exits And Crash Loops |
+| 050 / 01 | Service And External Request Troubleshooting | Tracing A Service Request; Tracing An External Request To The Application |
 
-- Recheck the curriculum and refine broad objectives into teachable modules.
-- Choose and record the environment versions and any image dependencies.
-- Write the introduction and remove placeholder notices only when it is ready.
-- Build short parts and runnable playgrounds; add graded labs where appropriate.
-- Add quizzes and a capstone when the completed domain needs them.
-- Check real outputs and reference solutions, and update `astrona.yaml`.
-- Remove `draft: true` from completed technical pages after review.
-- Publish the course only after the maintainer approves the completed content.
+The module goals and adaptation sources are recorded in AUTHORING.yaml. Every official objective is covered. Each section starts with an introduction, and each module ends with a summary. YAML banks follow the relevant summary and remain separate from the Markdown manifest.
+
+This is a reading-only draft. No new labs, playgrounds, command output or runtime verification are included. ATP005 publication remains draft.

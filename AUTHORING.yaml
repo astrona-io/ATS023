@@ -1,0 +1,139 @@
+version: 1
+approval: CKA requested 2026-10-11; established reading-only scope
+course:
+  id: ATS023
+  certification:
+    name: Certified Kubernetes Administrator
+    code: CKA
+    provider: CNCF / Linux Foundation
+    domain: Troubleshooting
+    weight: 30
+    competencies:
+    - Troubleshoot clusters and nodes
+    - Troubleshoot cluster components
+    - Monitor cluster and application resource usage
+    - Manage and evaluate container output streams
+    - Troubleshoot services and networking
+defaults:
+  playground: false
+  module_lab: false
+  capstone: false
+  section_quiz: true
+  final_quiz: true
+assessment_format: YAML question banks, schema version 1; indexed in assessments/index.yaml
+sections:
+- id: section-010
+  title: Troubleshoot clusters and nodes
+  curriculum_item: Troubleshoot clusters and nodes
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Node Conditions And Host Diagnosis
+    objectives:
+    - Distinguish unready, unschedulable and stale reporting.
+    - Trace kubelet and runtime dependencies.
+    - Interpret pressure, trust and connectivity evidence.
+    - Verify restored node responsibility without undoing intended policy.
+    outline:
+    - Diagnosing Node Readiness And Host Dependencies
+    - Node Health And Shared Dependencies
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+      adapted_from: null
+    - reading: sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
+      adapted_from: ATS038/sections/section-030/module-02/course-01-node-health-and-shared-dependencies.md
+- id: section-020
+  title: Troubleshoot cluster components
+  curriculum_item: Troubleshoot cluster components
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Control-Plane Responsibility And Failure Scope
+    objectives:
+    - Identify API, controller, scheduler and datastore responsibilities.
+    - Trace the first failed workload transition.
+    - Use local static-Pod evidence when API access fails.
+    - Distinguish component startup from useful dependent operations.
+    outline:
+    - Control Plane And Worker Responsibilities
+    - Locating A Control-Plane Component Failure
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-020/module-01/course-01-control-plane-and-worker-responsibilities.md
+      adapted_from: ATS037/sections/section-010/module-01/course-01-control-plane-and-worker-responsibilities.md
+    - reading: sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+      adapted_from: null
+- id: section-030
+  title: Monitor cluster and application resource usage
+  curriculum_item: Monitor cluster and application resource usage
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Resource Observations And Capacity Diagnosis
+    objectives:
+    - Compare specification, status, events and metrics.
+    - Confirm observation context and permissions.
+    - Distinguish measured usage from allocation and enforcement.
+    - Account for complete workload capacity requirements.
+    outline:
+    - Choosing Diagnostic Evidence With kubectl
+    - Expressing Resource Needs For Every Container
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+      adapted_from: ATS028/sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+    - reading: sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
+      adapted_from: ATS029/sections/section-050/module-01/course-01-expressing-resource-needs-for-every-container.md
+- id: section-040
+  title: Manage and evaluate container output streams
+  curriculum_item: Manage and evaluate container output streams
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Output Streams And Runtime Failure Evidence
+    objectives:
+    - Explain standard output and supported log retrieval.
+    - Select container, instance and observation window.
+    - Interpret restart and termination evidence.
+    - Protect sensitive records and preserve useful diagnostics.
+    outline:
+    - Selecting The Right Container Log And Time Window
+    - Logs, Exits And Crash Loops
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+      adapted_from: ATS028/sections/section-040/module-01/course-02-selecting-the-right-container-log-and-time-window.md
+    - reading: sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
+      adapted_from: ATS039/sections/section-020/module-01/course-01-logs-exits-and-crash-loops.md
+- id: section-050
+  title: Troubleshoot services and networking
+  curriculum_item: Troubleshoot services and networking
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Service And External Request Troubleshooting
+    objectives:
+    - Trace discovery, Service selection and backend ports.
+    - Distinguish readiness from process existence.
+    - Separate transport, routing and application failures.
+    - Choose a correction for the first demonstrated broken relationship.
+    outline:
+    - Tracing A Service Request
+    - Tracing An External Request To The Application
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-050/module-01/course-01-tracing-a-service-request.md
+      adapted_from: ATS038/sections/section-030/module-02/course-02-tracing-a-service-request.md
+    - reading: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+      adapted_from: ATS030/sections/section-030/module-02/course-01-tracing-an-external-request-to-the-application.md
