@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Tracing An External Request To The Application
 
+The frontend returns a routing error before the application logs a request. The request reached an intermediary, but that does not prove it reached `probe`. Diagnose hostname, path, certificate and backend selection as separate boundaries.
+
+## Learning objectives
+
+- Trace discovery, Service selection and backend ports.
+- Distinguish readiness from process existence.
+- Separate transport, routing and application failures.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 An external application request crosses several independently configured relationships. A client resolves a hostname, reaches an entry point, matches a route, reaches a Service backend and receives an application response. Diagnosing that path means finding the first relationship that fails, rather than changing every object that mentions the application's name.
 
 ## Begin With The Client Observation
@@ -38,6 +52,25 @@ NetworkPolicy can control allowed connections to or from selected Pods when the 
 The application must listen on an address reachable through the Pod network. Listening only on loopback can support requests from another container in the same Pod while preventing ordinary requests to the Pod address. A successful local health test does not prove that the Service backend target is reachable.
 
 Finally, inspect the path and protocol the application receives. A route match can deliver a path that the backend does not recognize, and TLS termination can leave a plain backend protocol unless additional configuration changes it. Correct the broken relationship while preserving the intended host, path and security contract. Then evaluate a meaningful application response, rather than only the existence of a network object.
+
+## Work through the decision
+
+Traefik can respond when no route matches or when its backend path fails. An application can also return an error after the controller successfully forwards to it. The response status alone does not identify the failing component. Compare route configuration, controller evidence, backend endpoints and application records.
+
+For TLS, the client needs a certificate chain it trusts and a hostname covered by that certificate. The practice uses a local certificate with a Subject Alternative Name (SAN) for `probe.local`. The trusted matching name should succeed, while a different hostname should fail verification. Disabling verification would remove the property being tested. The local certificate is temporary practice trust, not a production public certificate deployment.
+
+```mermaid
+flowchart TB
+    C["Client trust and hostname"] --> T["TLS frontend connection"]
+    T --> R["Ingress route match"]
+    R --> S["Service and endpoints"]
+    S --> A["Application handler"]
+    A --> O["Attributed response"]
+```
+
+Frontend trust, route matching and backend processing can fail independently along one external request.
+
+You can now attribute an external symptom to a specific request boundary. Repeat the intended hostname and operation with verification enabled after correcting the responsible setting.
 
 ## Common pitfalls
 

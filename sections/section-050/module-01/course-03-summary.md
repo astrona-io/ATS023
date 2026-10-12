@@ -8,3 +8,5 @@ exam_objectives:
 A request crosses independently configured discovery, selection, port and routing relationships. Running containers and accepted traffic objects do not establish useful service across that entire path.
 
 A focused diagnosis identifies the first demonstrated failure and the responsible component. Preserve the intended host, protocol and application operation while verifying that the corrected relationship restores meaningful behavior.
+
+You can now attribute an external symptom to a specific request boundary. Repeat the intended hostname and operation with verification enabled after correcting the responsible setting.
