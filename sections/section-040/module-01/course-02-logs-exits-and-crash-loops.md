@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Logs, Exits And Crash Loops
 
+A container exits because it cannot read required configuration. Kubernetes retries it and later displays a crash-loop backoff. The retry delay describes Kubernetes's response, while the first exit and its inputs explain the failure.
+
+## Learning objectives
+
+- Explain standard output and supported log retrieval.
+- Select container, instance and observation window.
+- Interpret restart and termination evidence.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 The `scout` process exits immediately after reading its configuration. Kubernetes can restart it, but repeated restarts do not fix a missing setting. Application debugging focuses on what the process did, what inputs it received and which dependencies it needed.
 
 A log is a record emitted by software about an event or condition. Logs can include timestamps, request identifiers and error details. A termination record can provide an exit code and reason. Read these together: an error message about a missing setting and an immediate nonzero exit support a different explanation from a memory-limit termination.
@@ -32,6 +46,26 @@ A useful hypothesis states which input or condition caused the failure and what 
 Changing the image, credentials, memory and probe at once can make the application run without identifying which change mattered. It can also conceal a new weakness, such as disabled health checks or excessive permissions. Prefer a focused correction supported by evidence and verify the expected transition.
 
 Keep the diagnostic record safe to share. Replace sensitive values with descriptions of their role, retain useful timestamps and include the relevant process or container identity. A strong explanation can demonstrate a configuration fault without copying production credentials into a public issue.
+
+## Work through the decision
+
+Container status separates the current state from the last terminated state and records a restart count. A currently running attempt can coexist with an earlier failed instance. The log stream you select must belong to the relevant container and attempt if it is to explain that termination.
+
+An exit reason and code provide runtime evidence. Application logs provide the process's perspective, which may be incomplete if output was buffered or the process was killed. A memory termination can leave no final application exception. Compare termination reason, resource settings and the preceding messages rather than treating the last line as a universal cause.
+
+```mermaid
+flowchart TB
+    I["Process input"] --> E["Process exit"]
+    E --> T["Termination record"]
+    E --> R["Restart attempt"]
+    R --> B["Backoff after repeated failure"]
+    L["Application messages"] --> D["Failure timeline"]
+    T --> D
+```
+
+Backoff follows failed attempts; it is not the original application event that caused the exit.
+
+You can now connect a restart to the relevant process instance and evidence. A focused correction must change the cause, while repeated restarts alone can reproduce the same failure indefinitely.
 
 ## Common pitfalls
 

@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Selecting The Right Container Log And Time Window
 
+During a rollout, two `probe` replicas can emit messages from different versions. A Deployment-level log shortcut can show only one selected Pod. Useful log diagnosis starts with an explicit Pod, container and time window.
+
+## Learning objectives
+
+- Explain standard output and supported log retrieval.
+- Select container, instance and observation window.
+- Interpret restart and termination evidence.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 Container logs provide text emitted by a container process through the supported logging path. They can describe application events and errors, but they do not automatically include every file the process writes. Useful diagnosis depends on selecting the correct Pod, container, instance and time window before interpreting the text.
 
 ## Understand What The Logging Path Captures
@@ -38,6 +52,25 @@ Logs can contain confidential input, tokens or personal information. Authors sho
 Suppose `scout` reports connection refused while trying to contact a backend. The message supports investigating the selected backend address, port and listener. It does not alone prove that a NetworkPolicy caused the failure or that credentials are incorrect. The next observation should distinguish those possibilities using resource relationships and connection behavior.
 
 Use logs to identify the process's perspective, then compare that perspective with Kubernetes status and dependency evidence. A complete explanation states which instance produced the record, what operation failed and what further facts establish the cause. That is stronger than treating one familiar error phrase as a universal diagnosis.
+
+## Work through the decision
+
+The runtime captures supported standard output and standard error streams, and the kubelet exposes the available records. A file written inside a container is not automatically included. A restarted container's previous instance is also different from a Pod that has been deleted and replaced.
+
+First identify the Pod that experienced the symptom, then choose the container within it. `-c` names the container, `--previous` requests retained logs from its preceding terminated instance, and `--since` restricts the time window. A missing previous stream can be normal for a container that never restarted. Local log retention is limited, so these flags do not provide an unlimited historical archive.
+
+```mermaid
+flowchart TB
+    P["Selected Pod"] --> C["Selected container"]
+    C --> I["Current or previous instance"]
+    I --> W["Time and record window"]
+    W --> L["Attributed log records"]
+    L --> D["Comparison with symptom"]
+```
+
+A meaningful log record has an identified source, lifecycle instance and observation window.
+
+You can now choose log evidence without merging unrelated replicas or attempts. Status and dependency evidence still provide facts that the application stream may never record.
 
 ## Common pitfalls
 
