@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Choosing Diagnostic Evidence With kubectl
 
+The `probe` Deployment requests two replicas, its status reports current availability, and metrics report recent resource usage. These are three different observations. Choosing the right one makes a troubleshooting claim precise.
+
+## Learning objectives
+
+- Compare specification, status, events and metrics.
+- Confirm observation context and permissions.
+- Distinguish measured usage from allocation and enforcement.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 `kubectl` is the Kubernetes command-line client. It sends requests to the application programming interface (API) server using a selected cluster, identity and namespace context. Its built-in inspection commands expose different kinds of evidence. Choosing the right evidence is part of diagnosis; a large collection of unrelated output can obscure the condition that actually prevents an application from working.
 
 ## Confirm The Observation Scope
@@ -38,6 +52,28 @@ If a Pod is Pending, status and events about scheduling or dependencies are usua
 The `logs` command retrieves supported container logs, while `exec` starts a process in a running container. They are different subresources and can require different permissions. An image without a shell cannot be inspected through a shell command merely because the Pod exists. A debugging container or copied workload can provide another method where supported and authorized, but it changes the investigation context.
 
 For a report frontend returning errors, begin with the specific failing path and time, identify the affected workload and compare its intended and observed state. Select each next observation to test a hypothesis. This creates an explainable diagnostic sequence instead of treating command familiarity as evidence of the cause.
+
+## Work through the decision
+
+`get` reads structured objects. `describe` combines their fields and related events into a human-readable view. `top` retrieves recent usage through the metrics API rather than reading resource requests from the Pod specification. Each command answers a different question, so collecting them without a hypothesis can still leave the cause unclear.
+
+For example, a Pod can request more memory than any node can allocate while currently using almost none, because it has not started. Low observed usage elsewhere does not make that request schedulable. Conversely, a running Pod can approach its memory limit while its declared request remains small. Metrics need a sampling window and cannot reconstruct every short-lived peak.
+
+```mermaid
+flowchart TB
+    S["Application symptom"] --> D["Desired specification"]
+    S --> O["Observed status"]
+    S --> E["Recent events"]
+    S --> M["Measured usage"]
+    D --> H["Testable diagnosis"]
+    O --> H
+    E --> H
+    M --> H
+```
+
+Different evidence types support a diagnosis only when they are connected to the same symptom and time.
+
+You can now select an observation by the question it answers. Correct scope, permissions and timing remain necessary before interpreting any command result as evidence of the application cause.
 
 ## Common pitfalls
 

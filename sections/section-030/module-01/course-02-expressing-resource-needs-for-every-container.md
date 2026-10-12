@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Expressing Resource Needs For Every Container
 
+The main process requests little memory, but its supporting container buffers a large amount of data. Scheduling and resource enforcement need the complete workload. A familiar request-to-limit ratio cannot replace that accounting.
+
+## Learning objectives
+
+- Compare specification, status, events and metrics.
+- Confirm observation context and permissions.
+- Distinguish measured usage from allocation and enforcement.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 A resource request declares capacity used in Kubernetes scheduling and related allocation behavior. A resource limit constrains allowed usage according to the resource and runtime. Application developers must express the needs of the complete Pod, including supporting containers, rather than assigning one memorable value to every workload.
 
 ## Understand CPU And Memory Units
@@ -38,6 +52,25 @@ Use expected steady use, initialization behavior and meaningful peaks to form a 
 Limits should reflect intended protection and application tolerance. A restrictive CPU limit can increase response time through throttling, while no limit can leave shared capacity exposed to high demand. The correct choice depends on the workload and platform policy rather than a universal ratio between request and limit.
 
 After expressing requirements, review the complete admitted workload and its observed scheduling and execution. Resource definitions are part of an application contract, not a guarantee that every future input fits. Preserve a distinction among allocation, enforcement, defaults and namespace policy when explaining a failure.
+
+## Work through the decision
+
+For ordinary containers running together, resource demand includes each container's requests. Regular sequential init containers use different accounting from simultaneous application containers, and restartable init sidecars add ongoing demand. Pod overhead and version-supported Pod resource settings can further affect the effective requirement.
+
+Inspect the admitted Pod as well as the Deployment template. Namespace defaults can fill omitted values when Pods are created. That makes a short source definition insufficient evidence for exact scheduling demand. Central processing unit (CPU) and memory also fail differently: CPU limits can throttle execution, while memory exhaustion can terminate a process. Raising one resource does not solve the other's failure.
+
+```mermaid
+flowchart TB
+    C["Container requirements"] --> P["Effective Pod demand"]
+    I["Init and sidecar semantics"] --> P
+    D["Admitted defaults and overhead"] --> P
+    P --> S["Scheduling feasibility"]
+    C --> R["Runtime limits"]
+```
+
+Effective scheduling demand and runtime limits are related declarations with different jobs.
+
+You can now account for the actual admitted workload and classify a resource failure. A justified size preserves application requirements rather than merely making a Pending status disappear.
 
 ## Common pitfalls
 
