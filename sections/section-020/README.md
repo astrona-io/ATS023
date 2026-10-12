@@ -5,7 +5,9 @@ exam_objectives:
 ---
 # Troubleshoot cluster components
 
-This section covers troubleshoot cluster components. You will study Control-Plane Responsibility And Failure Scope. The lessons explain the responsible components, configuration relationships and failure cases relevant to application development.
+A Deployment is accepted, but its new Pods never receive a node assignment. Request storage succeeded while scheduling did not progress. Naming each component makes that difference explainable.
+
+The explanations identify the responsible components, compare intended and observed state, and work through the decisions needed to preserve the requirement. Read the worked examples as reasoning about a proposed system; no environment is started by this section.
 
 Each module begins with its goals and ends with a summary. Reusable YAML knowledge checks follow the section summary and are registered separately for future presentation.
 
