@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Locating A Control-Plane Component Failure
 
+The API listener answers, but ordinary resource operations fail because its datastore is unavailable. Network reachability and useful API operation are different health observations.
+
+## Learning objectives
+
+- Identify API, controller, scheduler and datastore responsibilities.
+- Trace the first failed workload transition.
+- Use local static-Pod evidence when API access fails.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 Control-plane components maintain cluster state and coordinate work. The API server handles supported requests, the scheduler chooses nodes for unscheduled Pods, controllers reconcile desired objects and etcd stores cluster state. A failure in one responsibility can produce different symptoms from a failure in another, even when users describe both as a broken cluster.
 
 ## Identify Which Operation Stopped
@@ -38,6 +52,29 @@ A single affected workload can have its own invalid request or dependency. Many 
 For a new Deployment that produces no running Pods, trace accepted Deployment state, child-resource creation, node assignment and container preparation. The first demonstrated missing transition identifies the most relevant responsibility. This prevents confusing controller creation failure with later image retrieval failure.
 
 After restoring a component, check the operations it performs, not only its process existence. API requests, new scheduling decisions and resumed reconciliation contribute different verification. A working control plane should advance the intended state under the remaining capacity and policy constraints.
+
+## Work through the decision
+
+Start with the operation that stopped: reaching the endpoint, persisting an object, creating controller children or assigning a node. Each points to a different component and dependency. A healthy TCP connection cannot establish datastore access or request authorization.
+
+In a common kubeadm arrangement, local static-Pod manifests define core component execution through the kubelet. Mirror objects expose those Pods through the API without becoming the authoritative local lifecycle source. During API failure, local runtime and agent evidence can remain available. Preserve that distinction before deleting a visible object or assuming an API-only observation describes the complete host state.
+
+```mermaid
+flowchart TB
+    N0["Failed cluster operation"]
+    N1["Responsible control-plane component"]
+    N2["Local and dependency evidence"]
+    N3["Supported correction"]
+    N4["Operation recheck"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+```
+
+Control-plane diagnosis follows the failed responsibility and its dependencies rather than treating every API symptom as one outage.
+
+Control-plane diagnosis follows the failed responsibility and its dependencies rather than treating every API symptom as one outage.
 
 ## Common pitfalls
 
