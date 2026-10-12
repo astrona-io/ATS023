@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Diagnosing Node Readiness And Host Dependencies
 
+A node stops reporting readiness while some existing containers continue running. The reporting path and the container execution path can fail separately. A NotReady condition is therefore a starting symptom rather than one universal diagnosis.
+
+## Learning objectives
+
+- Distinguish unready, unschedulable and stale reporting.
+- Trace kubelet and runtime dependencies.
+- Interpret pressure, trust and connectivity evidence.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 A Node resource records a machine's identity, capacity and observed conditions in Kubernetes. The kubelet is the node agent that reports relevant state and manages local Pod execution through a runtime. A node becoming unready can reflect several host, communication or subsystem failures rather than one universal cause.
 
 ## Read Conditions And Timing
@@ -38,6 +52,29 @@ Suppose workloads stop being created on `outpost-node`. First identify whether t
 Existing containers may continue running during some control-plane communication failures, but that does not prove the node can accept new work or provide reliable recovery. Similarly, a repaired process may need time to refresh conditions and restore dependent subsystem behavior. Connect the repair to current readiness and an appropriate workload observation.
 
 A good diagnosis names the failing responsibility and the evidence that distinguishes it from adjacent layers. Preserve deliberate cordon and security settings unless they are actually the cause being corrected. That approach limits unrelated changes and provides a clear explanation of restored node service.
+
+## Work through the decision
+
+Suppose the kubelet can no longer authenticate to the API server. Its existing local processes can behave differently from new container startup attempts, and control-plane observations can become stale. Compare report timing, local agent state, runtime access and endpoint trust.
+
+Now compare an intentionally cordoned node. Cordon prevents new ordinary scheduling while the agent and existing workloads can remain healthy. Reversing that administrative boundary does not repair a reporting failure. A good diagnosis names the specific dependency that stopped and preserves deliberate maintenance intent.
+
+```mermaid
+flowchart TB
+    N0["Host dependencies"]
+    N1["Kubelet operation"]
+    N2["Authenticated API reporting"]
+    N3["Fresh node conditions"]
+    N4["Scheduling interpretation"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+```
+
+Node health evidence must distinguish current local behavior, reporting freshness and deliberate scheduling controls.
+
+Node health evidence must distinguish current local behavior, reporting freshness and deliberate scheduling controls.
 
 ## Common pitfalls
 

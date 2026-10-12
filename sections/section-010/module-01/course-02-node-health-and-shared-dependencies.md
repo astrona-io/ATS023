@@ -5,6 +5,20 @@ exam_objectives:
 ---
 # Node Health And Shared Dependencies
 
+Several unrelated Pods fail only on one worker. Their shared node is a stronger initial hypothesis than an identical application bug. Failure distribution helps select the investigation scope.
+
+## Learning objectives
+
+- Distinguish unready, unschedulable and stale reporting.
+- Trace kubelet and runtime dependencies.
+- Interpret pressure, trust and connectivity evidence.
+
+## Before you start
+
+This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+
+## Responsible components and behavior
+
 Several unrelated workloads fail on the same node. That pattern suggests a shared dependency rather than identical application bugs. A node's kubelet reports conditions such as readiness and resource pressure, which help the control plane decide how to treat workloads and scheduling on that node.
 
 A NotReady condition can result from node or kubelet problems, but the condition alone does not identify the root cause. The node's runtime, network connectivity, system resources and communication with the control plane are relevant. Existing containers may behave differently from new startup attempts, so compare the timing and affected operations.
@@ -32,6 +46,29 @@ A provisioned volume can fail to attach to a node, mount into a Pod or serve app
 A remote backend outage can affect otherwise Ready nodes. A topology mismatch can prevent access from one location while storage remains healthy elsewhere. A local volume can depend on one node whose failure removes access to the data. The backend's actual availability contract determines what recovery is possible.
 
 Choose the smallest supported scope for correction. Replacing one faulty node can help a node-specific runtime failure; restarting every workload may add disruption without repairing an external storage outage. Preserve evidence and verify from representative consumers after the shared dependency recovers.
+
+## Work through the decision
+
+A runtime outage on one node can stop new container starts while other nodes remain healthy. A storage-service outage can affect consumers across many nodes instead. Group symptoms by operation, location and time before choosing which shared component to inspect.
+
+Container memory-limit termination and node-wide memory pressure are also different boundaries. The first concerns a process's permitted allocation; the second can cause node eviction decisions affecting several workloads. Replacing evicted Pods needs capacity elsewhere and does not repair the original pressure. Broad restarts can remove useful evidence without addressing either cause.
+
+```mermaid
+flowchart TB
+    N0["Observed failure distribution"]
+    N1["Shared dependency hypothesis"]
+    N2["Node or external evidence"]
+    N3["Focused correction"]
+    N4["Original operation verification"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+```
+
+The affected population narrows scope, while specific dependency evidence establishes the cause.
+
+The affected population narrows scope, while specific dependency evidence establishes the cause.
 
 ## Common pitfalls
 
