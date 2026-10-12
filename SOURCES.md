@@ -37,3 +37,15 @@ Check version-specific fields and tool options against the intended platform bef
 - [CoreDNS diagnosis](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/)
 - [Gateway API responsibilities](https://gateway-api.sigs.k8s.io/docs/concepts/api-overview/)
 - [Cross-namespace reference grants](https://gateway-api.sigs.k8s.io/reference/api-types/referencegrant/)
+
+## Material expansion review — 2026-10-12
+
+Applied the local astrona-course-expand-material skill with CLAUDE.md plain-English, standalone-page and diagram rules. Existing author sources remain applicable. Additional mechanism checks used:
+
+- https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+- https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+- https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/
+- https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/
+- https://kubernetes.io/docs/tutorials/security/seccomp/
+- https://kubernetes.io/docs/tutorials/security/apparmor/
+- https://falco.org/docs/concepts/
