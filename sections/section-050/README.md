@@ -5,7 +5,9 @@ exam_objectives:
 ---
 # Troubleshoot services and networking
 
-This section covers troubleshoot services and networking. You will study Service And External Request Troubleshooting. The lessons explain the responsible components, configuration relationships and failure cases relevant to application development.
+A request resolves the Service name but times out before receiving an application response. DNS success narrows the investigation without completing it. Find the next unresolved boundary instead of repeating unrelated discovery checks.
+
+The explanations identify the responsible components, compare intended and observed state, and work through the decisions needed to preserve the requirement. Read the worked examples as reasoning about a proposed system; no environment is started by this section.
 
 Each module begins with its goals and ends with a summary. Reusable YAML knowledge checks follow the section summary and are registered separately for future presentation.
 
