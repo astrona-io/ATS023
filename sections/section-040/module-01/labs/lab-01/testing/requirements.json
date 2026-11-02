@@ -1,0 +1,39 @@
+{
+  "context": "kind-astro-ats-023-lab-040-01-01",
+  "resources": [
+    {
+      "kind": "configmap",
+      "name": "crash-diagnosis",
+      "expected": {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+          "name": "crash-diagnosis",
+          "namespace": "starfleet"
+        },
+        "data": {
+          "container": "report",
+          "exitCode": "12",
+          "logMarker": "application-started"
+        }
+      }
+    }
+  ],
+  "behavior": [
+    {
+      "args": [
+        "kubectl",
+        "-n",
+        "starfleet",
+        "logs",
+        "crash-report",
+        "-c",
+        "report",
+        "--previous"
+      ],
+      "contains": [
+        "application-started"
+      ]
+    }
+  ]
+}

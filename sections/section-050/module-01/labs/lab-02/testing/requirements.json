@@ -1,0 +1,158 @@
+{
+  "context": "kind-astro-ats-023-lab-050-01-02",
+  "resources": [
+    {
+      "kind": "ingress",
+      "name": "probe",
+      "expected": {
+        "apiVersion": "networking.k8s.io/v1",
+        "kind": "Ingress",
+        "metadata": {
+          "name": "probe",
+          "namespace": "starfleet"
+        },
+        "spec": {
+          "ingressClassName": "traefik",
+          "rules": [
+            {
+              "host": "probe.local",
+              "http": {
+                "paths": [
+                  {
+                    "path": "/",
+                    "pathType": "Prefix",
+                    "backend": {
+                      "service": {
+                        "name": "probe",
+                        "port": {
+                          "number": 80
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "deployment",
+      "name": "probe",
+      "expected": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {
+          "name": "probe",
+          "namespace": "starfleet"
+        },
+        "spec": {
+          "replicas": 2,
+          "selector": {
+            "matchLabels": {
+              "app": "probe",
+              "release": "probe"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "probe",
+                "release": "probe"
+              }
+            },
+            "spec": {
+              "containers": [
+                {
+                  "name": "probe",
+                  "image": "docker.io/library/python:3.13-alpine",
+                  "command": [
+                    "python",
+                    "/app/server.py"
+                  ],
+                  "env": [
+                    {
+                      "name": "VERSION",
+                      "value": "v1"
+                    }
+                  ],
+                  "ports": [
+                    {
+                      "name": "http",
+                      "containerPort": 8080
+                    }
+                  ],
+                  "readinessProbe": {
+                    "httpGet": {
+                      "path": "/ready",
+                      "port": "http"
+                    },
+                    "periodSeconds": 2
+                  },
+                  "resources": {
+                    "requests": {
+                      "cpu": "10m",
+                      "memory": "32Mi"
+                    },
+                    "limits": {
+                      "memory": "128Mi"
+                    }
+                  },
+                  "volumeMounts": [
+                    {
+                      "name": "app",
+                      "mountPath": "/app",
+                      "readOnly": true
+                    }
+                  ]
+                }
+              ],
+              "volumes": [
+                {
+                  "name": "app",
+                  "configMap": {
+                    "name": "probe-code"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "state": "deployment"
+    }
+  ],
+  "behavior": [
+    {
+      "args": [
+        "kubectl",
+        "-n",
+        "starfleet",
+        "exec",
+        "deployment/probe",
+        "--",
+        "python",
+        "-c",
+        "import urllib.request,urllib.error; request=urllib.request.Request('http://traefik.ingress-system.svc/',headers={'Host':'probe.local'}); print(urllib.request.urlopen(request,timeout=5).read().decode())"
+      ],
+      "contains": [
+        "version=v1 host=probe-"
+      ]
+    },
+    {
+      "args": [
+        "kubectl",
+        "-n",
+        "starfleet",
+        "exec",
+        "deployment/probe",
+        "--",
+        "python",
+        "-c",
+        "import urllib.request,urllib.error; request=urllib.request.Request('http://traefik.ingress-system.svc/',headers={'Host':'unmatched.local'});\ntry: urllib.request.urlopen(request,timeout=5); raise RuntimeError('Unexpected matched route')\nexcept urllib.error.HTTPError as error: print(error.code)"
+      ],
+      "equals": "404"
+    }
+  ]
+}

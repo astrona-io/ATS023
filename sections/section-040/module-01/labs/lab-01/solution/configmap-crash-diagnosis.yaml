@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crash-diagnosis
+  namespace: starfleet
+data:
+  container: report
+  exitCode: '12'
+  logMarker: application-started
