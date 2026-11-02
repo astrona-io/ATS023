@@ -1,9 +1,9 @@
-# Reading-only course. YAML assessments are registered separately in assessments/index.yaml.
 training:
   id: ATS023
   title: 'CKA: Troubleshooting'
-  description: Detailed reading lessons and reusable YAML knowledge checks covering the CKA domain. No
-    new labs or playgrounds. Technical content remains draft for review.
+  description: Detailed reading lessons and reusable YAML knowledge checks covering
+    the CKA domain. No new labs or playgrounds. Technical content remains draft for
+    review.
   certification:
     name: Certified Kubernetes Administrator
     code: CKA
@@ -35,8 +35,9 @@ modules:
     path: sections/intro/course-03-how-this-course-is-made.md
 - id: module-010
   title: Troubleshoot clusters and nodes
-  description: Developed explanations and application reasoning for Troubleshoot clusters and nodes.
-  draft: true
+  description: Developed explanations and application reasoning for Troubleshoot clusters
+    and nodes.
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot clusters and nodes
@@ -51,12 +52,35 @@ modules:
     title: Node Health And Shared Dependencies
     path: sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
   - type: reading
+    title: Recover A Stopped Worker Kubelet — Task
+    path: sections/section-010/module-01/labs/lab-01/question.md
+  - type: lab
+    title: Recover A Stopped Worker Kubelet
+    path: sections/section-010/module-01/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: kubelet-recovery
+    task_kind: build
+    learning_goals:
+    - Trace a worker readiness failure to its stopped kubelet service and restore
+      it.
+    tags:
+    - cka
+    - kubelet-recovery
+  - type: reading
+    title: Recover A Stopped Worker Kubelet — Solution
+    path: sections/section-010/module-01/labs/lab-01/solution.md
+  - type: reading
+    title: 'Guided Practice: Recover A Stopped Worker Kubelet'
+    path: sections/section-010/module-01/course-03-guided-practice.md
+  - type: reading
     title: Summary
-    path: sections/section-010/module-01/course-03-summary.md
+    path: sections/section-010/module-01/course-04-summary.md
 - id: module-020
   title: Troubleshoot cluster components
-  description: Developed explanations and application reasoning for Troubleshoot cluster components.
-  draft: true
+  description: Developed explanations and application reasoning for Troubleshoot cluster
+    components.
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot cluster components
@@ -71,13 +95,35 @@ modules:
     title: Locating A Control-Plane Component Failure
     path: sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
   - type: reading
+    title: Recover A Controller Manager Static Pod — Task
+    path: sections/section-020/module-01/labs/lab-01/question.md
+  - type: lab
+    title: Recover A Controller Manager Static Pod
+    path: sections/section-020/module-01/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: controller-recovery
+    task_kind: troubleshooting
+    learning_goals:
+    - Repair an invalid controller-manager flag and verify that Deployment reconciliation
+      resumes.
+    tags:
+    - cka
+    - controller-recovery
+  - type: reading
+    title: Recover A Controller Manager Static Pod — Solution
+    path: sections/section-020/module-01/labs/lab-01/solution.md
+  - type: reading
+    title: 'Guided Practice: Recover A Controller Manager Static Pod'
+    path: sections/section-020/module-01/course-03-guided-practice.md
+  - type: reading
     title: Summary
-    path: sections/section-020/module-01/course-03-summary.md
+    path: sections/section-020/module-01/course-04-summary.md
 - id: module-030
   title: Monitor cluster and application resource usage
-  description: Developed explanations and application reasoning for Monitor cluster and application resource
-    usage.
-  draft: true
+  description: Developed explanations and application reasoning for Monitor cluster
+    and application resource usage.
+  status: alpha
   content:
   - type: reading
     title: Monitor cluster and application resource usage
@@ -89,16 +135,37 @@ modules:
     title: Choosing Diagnostic Evidence With kubectl
     path: sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
   - type: reading
+    title: Capture Live Pod Metrics — Task
+    path: sections/section-030/module-01/labs/lab-01/question.md
+  - type: lab
+    title: Capture Live Pod Metrics
+    path: sections/section-030/module-01/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: live-metrics
+    task_kind: build
+    learning_goals:
+    - Combine ready workload state with a recent metrics API measurement.
+    tags:
+    - cka
+    - live-metrics
+  - type: reading
+    title: Capture Live Pod Metrics — Solution
+    path: sections/section-030/module-01/labs/lab-01/solution.md
+  - type: reading
     title: Expressing Resource Needs For Every Container
     path: sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
   - type: reading
+    title: 'Guided Practice: Capture Live Pod Metrics'
+    path: sections/section-030/module-01/course-03-guided-practice.md
+  - type: reading
     title: Summary
-    path: sections/section-030/module-01/course-03-summary.md
+    path: sections/section-030/module-01/course-04-summary.md
 - id: module-040
   title: Manage and evaluate container output streams
-  description: Developed explanations and application reasoning for Manage and evaluate container output
-    streams.
-  draft: true
+  description: Developed explanations and application reasoning for Manage and evaluate
+    container output streams.
+  status: alpha
   content:
   - type: reading
     title: Manage and evaluate container output streams
@@ -113,12 +180,34 @@ modules:
     title: Logs, Exits And Crash Loops
     path: sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
   - type: reading
+    title: Diagnose A Previous Container Exit — Task
+    path: sections/section-040/module-01/labs/lab-01/question.md
+  - type: lab
+    title: Diagnose A Previous Container Exit
+    path: sections/section-040/module-01/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: previous-logs
+    task_kind: build
+    learning_goals:
+    - Select the previous container log and record the corresponding exit evidence.
+    tags:
+    - cka
+    - previous-logs
+  - type: reading
+    title: Diagnose A Previous Container Exit — Solution
+    path: sections/section-040/module-01/labs/lab-01/solution.md
+  - type: reading
+    title: 'Guided Practice: Diagnose A Previous Container Exit'
+    path: sections/section-040/module-01/course-03-guided-practice.md
+  - type: reading
     title: Summary
-    path: sections/section-040/module-01/course-03-summary.md
+    path: sections/section-040/module-01/course-04-summary.md
 - id: module-050
   title: Troubleshoot services and networking
-  description: Developed explanations and application reasoning for Troubleshoot services and networking.
-  draft: true
+  description: Developed explanations and application reasoning for Troubleshoot services
+    and networking.
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot services and networking
@@ -130,8 +219,49 @@ modules:
     title: Tracing A Service Request
     path: sections/section-050/module-01/course-01-tracing-a-service-request.md
   - type: reading
+    title: Repair A Service Selector — Task
+    path: sections/section-050/module-01/labs/lab-01/question.md
+  - type: lab
+    title: Repair A Service Selector
+    path: sections/section-050/module-01/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: service-selector
+    task_kind: build
+    learning_goals:
+    - Restore backend selection while preserving the existing client and listener
+      ports.
+    tags:
+    - cka
+    - service-selector
+  - type: reading
+    title: Repair A Service Selector — Solution
+    path: sections/section-050/module-01/labs/lab-01/solution.md
+  - type: reading
     title: Tracing An External Request To The Application
     path: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
   - type: reading
+    title: Repair A Missing Ingress Backend — Task
+    path: sections/section-050/module-01/labs/lab-02/question.md
+  - type: lab
+    title: Repair A Missing Ingress Backend
+    path: sections/section-050/module-01/labs/lab-02
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: ingress-backend
+    task_kind: build
+    learning_goals:
+    - Trace a failed external route to a nonexistent backend reference and repair
+      it.
+    tags:
+    - cka
+    - ingress-backend
+  - type: reading
+    title: Repair A Missing Ingress Backend — Solution
+    path: sections/section-050/module-01/labs/lab-02/solution.md
+  - type: reading
+    title: 'Guided Practice: Repair A Service Selector'
+    path: sections/section-050/module-01/course-03-guided-practice.md
+  - type: reading
     title: Summary
-    path: sections/section-050/module-01/course-03-summary.md
+    path: sections/section-050/module-01/course-04-summary.md
