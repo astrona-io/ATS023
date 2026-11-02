@@ -1,0 +1,113 @@
+schema_version: 1
+kind: question_bank
+id: ats023-domain-review
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: domain
+  id: domain-review
+  title: Troubleshooting
+placement:
+  position: after
+  reading: sections/section-050/module-01/course-03-summary.md
+questions:
+- id: ats023-domain-review-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish unready, unschedulable and stale reporting.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A node has a stale readiness observation after losing API connectivity. What must diagnosis
+    distinguish?
+  options:
+  - id: a
+    text: The reporting path from local container execution
+    explanation: Some processes can continue while management communication fails.
+  - id: b
+    text: An assumption that every process immediately stopped
+    explanation: Stale reporting is not that proof.
+  - id: c
+    text: An assumption that the node is fully ready for new work
+    explanation: Management and preparation conditions still need evidence.
+  correct_option: a
+  explanation: Some processes can continue while management communication fails.
+- id: ats023-domain-review-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Trace the first failed workload transition.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: A Pod is created but remains without a node because of hard affinity. Which stage explains the
+    condition?
+  options:
+  - id: a
+    text: Only API resource registration
+    explanation: The object was already accepted.
+  - id: b
+    text: Only log forwarding after startup
+    explanation: It has not reached ordinary process execution.
+  - id: c
+    text: Placement feasibility rather than missing controller creation
+    explanation: The child object exists and its eligibility must be reviewed.
+  correct_option: c
+  explanation: The child object exists and its eligibility must be reviewed.
+- id: ats023-domain-review-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish measured usage from allocation and enforcement.
+  source_readings:
+  - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+  prompt: A low current CPU metric is presented as proof that a large request fits a node. What is missing?
+  options:
+  - id: a
+    text: A claim retention label
+    explanation: Storage retention naming does not quantify CPU capacity.
+  - id: b
+    text: The declared allocation and eligible remaining capacity
+    explanation: Usage and scheduler accounting are different facts.
+  - id: c
+    text: The colour of the terminal prompt
+    explanation: Display style does not establish scheduling feasibility.
+  correct_option: b
+  explanation: Usage and scheduler accounting are different facts.
+- id: ats023-domain-review-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Select container, instance and observation window.
+  source_readings:
+  - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+  prompt: A crash occurred in the prior application container, but only a healthy helper log was read.
+    What is wrong?
+  options:
+  - id: a
+    text: The selected stream does not address the failed instance
+    explanation: Container and lifecycle identity must match the symptom.
+  - id: b
+    text: The helper's success proves every container worked
+    explanation: Shared placement does not merge responsibilities.
+  - id: c
+    text: Every log in a Pod is automatically identical
+    explanation: Each container can emit distinct records.
+  correct_option: a
+  explanation: Container and lifecycle identity must match the symptom.
+- id: ats023-domain-review-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Choose a correction for the first demonstrated broken relationship.
+  source_readings:
+  - sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+  prompt: A route matches but its Service target has no listener. What should be corrected?
+  options:
+  - id: a
+    text: Only the TLS certificate description
+    explanation: Transport identity does not create the missing listener.
+  - id: b
+    text: Every role binding in the cluster
+    explanation: Unrelated authorization changes do not address the demonstrated failure.
+  - id: c
+    text: The backend port and application listener relationship
+    explanation: Earlier route matching cannot repair the final connection target.
+  correct_option: c
+  explanation: Earlier route matching cannot repair the final connection target.

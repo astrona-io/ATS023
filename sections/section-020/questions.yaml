@@ -1,0 +1,110 @@
+schema_version: 1
+kind: question_bank
+id: ats023-section-020
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-020
+  title: Troubleshoot cluster components
+placement:
+  position: after
+  reading: sections/section-020/module-01/course-03-summary.md
+questions:
+- id: ats023-section-020-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Identify API, controller, scheduler and datastore responsibilities.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: API requests work but suitable Pods remain unassigned. Which responsibility is relevant?
+  options:
+  - id: a
+    text: Scheduling, together with valid placement and capacity constraints
+    explanation: Accepted objects and node assignment are different transitions.
+  - id: b
+    text: Only the application's report handler
+    explanation: The process may not have started before placement.
+  - id: c
+    text: Only whether the public DNS name exists
+    explanation: External naming does not select a node.
+  correct_option: a
+  explanation: Accepted objects and node assignment are different transitions.
+- id: ats023-section-020-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Trace the first failed workload transition.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: A Deployment is accepted but expected child objects are not created. What should be investigated?
+  options:
+  - id: a
+    text: Only the container's readiness endpoint
+    explanation: There may be no child process yet to probe.
+  - id: b
+    text: Only the Service target port
+    explanation: Routing does not create missing controller children.
+  - id: c
+    text: Controller reconciliation and its required API operations
+    explanation: Desired owner state does not prove child creation succeeded.
+  correct_option: c
+  explanation: Desired owner state does not prove child creation succeeded.
+- id: ats023-section-020-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Use local static-Pod evidence when API access fails.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: The API server is down in a kubeadm static-Pod arrangement. Which evidence can still be relevant?
+  options:
+  - id: a
+    text: Only the Helm release's display title
+    explanation: A title does not describe local component preparation.
+  - id: b
+    text: Local kubelet, runtime and manifest observations
+    explanation: The local lifecycle can be inspected without assuming working API access.
+  - id: c
+    text: Only API-based describe output that cannot reach the server
+    explanation: That observation path is currently unavailable.
+  correct_option: b
+  explanation: The local lifecycle can be inspected without assuming working API access.
+- id: ats023-section-020-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Use local static-Pod evidence when API access fails.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: Why may deleting a mirror Pod fail to remove its underlying component?
+  options:
+  - id: a
+    text: The kubelet still manages the local static-Pod definition
+    explanation: The visible mirror is not the source of that local desired state.
+  - id: b
+    text: Every mirror Pod is managed by an ordinary Deployment
+    explanation: Static-Pod ownership has a different lifecycle source.
+  - id: c
+    text: Deleting the mirror automatically deletes the host's certificate directory
+    explanation: The API object deletion does not universally erase local files.
+  correct_option: a
+  explanation: The visible mirror is not the source of that local desired state.
+- id: ats023-section-020-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish component startup from useful dependent operations.
+  source_readings:
+  - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+  prompt: An API listener accepts connections but datastore operations fail. What does this show?
+  options:
+  - id: a
+    text: The entire control plane is definitely healthy
+    explanation: A port response is insufficient evidence.
+  - id: b
+    text: The scheduler automatically restores missing datastore quorum
+    explanation: Scheduling does not recreate consensus majority by itself.
+  - id: c
+    text: Transport reachability does not prove useful API operations
+    explanation: The datastore dependency can fail behind a live listener.
+  correct_option: c
+  explanation: The datastore dependency can fail behind a live listener.

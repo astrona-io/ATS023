@@ -1,0 +1,111 @@
+schema_version: 1
+kind: question_bank
+id: ats023-section-050
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-050
+  title: Troubleshoot services and networking
+placement:
+  position: after
+  reading: sections/section-050/module-01/course-03-summary.md
+questions:
+- id: ats023-section-050-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Trace discovery, Service selection and backend ports.
+  source_readings:
+  - sections/section-050/module-01/course-01-tracing-a-service-request.md
+  prompt: A client resolves a Service name but cannot connect. Which conclusion fits?
+  options:
+  - id: a
+    text: Discovery succeeded while a later relationship can still fail
+    explanation: Resolution does not establish selected capacity or listener reachability.
+  - id: b
+    text: All networking must therefore be healthy
+    explanation: Name lookup tests only a part of the path.
+  - id: c
+    text: The application must have completed every database operation
+    explanation: Transport and business behavior remain separate.
+  correct_option: a
+  explanation: Resolution does not establish selected capacity or listener reachability.
+- id: ats023-section-050-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish readiness from process existence.
+  source_readings:
+  - sections/section-050/module-01/course-01-tracing-a-service-request.md
+  prompt: A Service has matching Pods but none is ready. What should be examined?
+  options:
+  - id: a
+    text: Only whether the Service has a memorable name
+    explanation: Naming does not make backends ready.
+  - id: b
+    text: Only increasing a path-prefix string
+    explanation: Ingress path changes do not repair a readiness dependency.
+  - id: c
+    text: Readiness conditions and their actual application dependencies
+    explanation: Selection alone does not provide usable ordinary endpoints.
+  correct_option: c
+  explanation: Selection alone does not provide usable ordinary endpoints.
+- id: ats023-section-050-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Separate transport, routing and application failures.
+  source_readings:
+  - sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+  prompt: A not-found response may come from either controller fallback or the application. What helps
+    distinguish them?
+  options:
+  - id: a
+    text: Always replacing the datastore
+    explanation: A route-level response does not establish datastore corruption.
+  - id: b
+    text: Response identity and route-to-backend evidence
+    explanation: The same broad status can arise at different stages.
+  - id: c
+    text: Always blaming DNS
+    explanation: A returned response needs more context than lookup alone.
+  correct_option: b
+  explanation: The same broad status can arise at different stages.
+- id: ats023-section-050-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Separate transport, routing and application failures.
+  source_readings:
+  - sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+  prompt: A TLS name verification error occurs before useful application exchange. Which contract matters?
+  options:
+  - id: a
+    text: The requested name, certificate coverage and trust
+    explanation: The secure transport relationship must satisfy the client's verification.
+  - id: b
+    text: Only the Deployment's desired replica count
+    explanation: Replica count does not repair certificate naming.
+  - id: c
+    text: Only the claim's access mode
+    explanation: Storage access is unrelated to this verification failure.
+  correct_option: a
+  explanation: The secure transport relationship must satisfy the client's verification.
+- id: ats023-section-050-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Choose a correction for the first demonstrated broken relationship.
+  source_readings:
+  - sections/section-050/module-01/course-01-tracing-a-service-request.md
+  prompt: Why locate the first demonstrated failure before editing several network objects?
+  options:
+  - id: a
+    text: Every object always shares exactly the same failure cause
+    explanation: The path has independent contracts.
+  - id: b
+    text: A long command history automatically proves root cause
+    explanation: Tool use alone does not establish a supported explanation.
+  - id: c
+    text: It supports a focused correction and preserves other valid relationships
+    explanation: Changing unrelated objects can hide evidence and introduce new defects.
+  correct_option: c
+  explanation: Changing unrelated objects can hide evidence and introduce new defects.

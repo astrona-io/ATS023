@@ -1,9 +1,9 @@
 # How This Course Is Made
 
-Paris Nakita Kejser at Astrona.io maintains this course. Technical content and
-environments will be written, checked and reviewed during content authoring.
+Authors map every section to the official Certified Kubernetes Administrator (CKA) objectives and review mechanisms against primary documentation. They check examples for component responsibility and questions for one supported answer.
 
-The initial repository contains the curriculum outline and placeholders.
-Contributors are listed on the [contributors page](https://github.com/astrona-io/ATS023/graphs/contributors).
-Report mistakes on the [issues page](https://github.com/astrona-io/ATS023/issues).
-The course uses the [Apache-2.0 license](https://github.com/astrona-io/ATS023/blob/main/LICENSE).
+Structural checks verify reading paths, section introductions, module summaries, draft front matter and YAML contracts. Technical pages remain draft until review. No executed commands, sample runtime output or laboratory validation are claimed.
+
+The [contributors](https://github.com/astrona-io/ATS023/graphs/contributors) maintain the material. To [report a mistake](https://github.com/astrona-io/ATS023/issues), identify the page and statement, and explain the expected behavior. The repository [license](https://github.com/astrona-io/ATS023/blob/main/LICENSE) governs reuse.
+
+Official objectives belong to their respective owners. Teaching and knowledge checks are independently authored learning material.
