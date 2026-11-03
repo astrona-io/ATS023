@@ -5,7 +5,7 @@ exam_objectives:
 ---
 # Control-Plane Responsibility And Failure Scope
 
-This module develops control-Plane Responsibility And Failure Scope. It connects the intended application behavior to declared resources and observed conditions.
+This module names the job of each control-plane component and shows how to find the one that stopped. It connects the behaviour you expect from a Deployment to the objects and conditions you can observe.
 
 ## Learning Goals
 
@@ -16,10 +16,13 @@ This module develops control-Plane Responsibility And Failure Scope. It connects
 
 ## Before You Start
 
-Examples describe system behavior. No runtime is required. Read each field or diagnostic name as part of the stated contract.
+You need basic kubectl skills and a shell. The module playground is a kind cluster with one control-plane node and one worker node. Graded exercises use independent environments and follow the lessons they practise.
 
 ## Reading Order
 
 1. Control Plane And Worker Responsibilities
 2. Locating A Control-Plane Component Failure
-3. Summary
+3. Guided Practice: Recover A Controller Manager Static Pod
+4. Summary
+
+<!-- astrona:playground -->

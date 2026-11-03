@@ -7,7 +7,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-010/module-01/course-03-summary.md
+    reading: sections/section-010/module-01/course-04-summary.md
   covered_sections:
   - section-010
 - id: ats023-section-020
@@ -15,7 +15,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-020/module-01/course-03-summary.md
+    reading: sections/section-020/module-01/course-04-summary.md
   covered_sections:
   - section-020
 - id: ats023-section-030
@@ -23,7 +23,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-030/module-01/course-03-summary.md
+    reading: sections/section-030/module-01/course-04-summary.md
   covered_sections:
   - section-030
 - id: ats023-section-040
@@ -31,7 +31,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-040/module-01/course-03-summary.md
+    reading: sections/section-040/module-01/course-04-summary.md
   covered_sections:
   - section-040
 - id: ats023-section-050
@@ -39,7 +39,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-050/module-01/course-03-summary.md
+    reading: sections/section-050/module-01/course-04-summary.md
   covered_sections:
   - section-050
 - id: ats023-domain-review
@@ -47,7 +47,7 @@ banks:
   question_count: 5
   placement:
     position: after
-    reading: sections/section-050/module-01/course-03-summary.md
+    reading: sections/section-050/module-01/course-04-summary.md
   covered_sections:
   - section-010
   - section-020

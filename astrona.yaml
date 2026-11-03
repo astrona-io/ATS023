@@ -1,9 +1,11 @@
+---
 training:
   id: ATS023
   title: 'CKA: Troubleshooting'
-  description: Detailed reading lessons and reusable YAML knowledge checks covering
-    the CKA domain. No new labs or playgrounds. Technical content remains draft for
-    review.
+  description: 'Reading lessons, ungraded playgrounds, graded labs, section capstones
+    and quizzes covering the CKA Troubleshooting domain: nodes, control-plane components,
+    resource monitoring, container logs, and services and networking. Labs are untested
+    against a live cluster. Technical content remains draft for review.'
   certification:
     name: Certified Kubernetes Administrator
     code: CKA
@@ -37,7 +39,7 @@ modules:
   title: Troubleshoot clusters and nodes
   description: Developed explanations and application reasoning for Troubleshoot clusters
     and nodes.
-  maturity: alpha
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot clusters and nodes
@@ -68,19 +70,118 @@ modules:
     - cka
     - kubelet-recovery
   - type: reading
-    title: Recover A Stopped Worker Kubelet — Solution
-    path: sections/section-010/module-01/labs/lab-01/solution.md
-  - type: reading
     title: 'Guided Practice: Recover A Stopped Worker Kubelet'
     path: sections/section-010/module-01/course-03-guided-practice.md
   - type: reading
     title: Summary
     path: sections/section-010/module-01/course-04-summary.md
+  - type: reading
+    title: Pending Pods, Taints And Node Maintenance
+    path: sections/section-010/module-02/course.md
+  - type: reading
+    title: How The Scheduler Decides
+    path: sections/section-010/module-02/course-01-how-the-scheduler-decides.md
+  - type: reading
+    title: Taints, Tolerations And Placement Rules
+    path: sections/section-010/module-02/course-02-taints-tolerations-and-placement-rules.md
+  - type: reading
+    title: Repair A Pending Deployment — Task
+    path: sections/section-010/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Repair A Pending Deployment
+    path: sections/section-010/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: scheduling-failures
+    task_kind: troubleshoot
+    learning_goals:
+    - Read a FailedScheduling event and name each rule that rejected the node.
+    - Correct a node selector, add a toleration and lower a resource request without
+      removing the taint.
+    tags:
+    - cka
+    - scheduling
+    - taints
+    resources:
+    - name: Assigning Pods to nodes
+      url: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    - name: Taints and tolerations
+      url: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  - type: reading
+    title: Cordon, Drain And Disruption Budgets
+    path: sections/section-010/module-02/course-03-cordon-drain-and-disruption-budgets.md
+  - type: reading
+    title: Summary
+    path: sections/section-010/module-02/course-04-summary.md
+  - type: reading
+    title: 'Failed Workloads: Events And Pod States'
+    path: sections/section-010/module-03/course.md
+  - type: reading
+    title: Reading Pod State And Events
+    path: sections/section-010/module-03/course-01-reading-pod-state-and-events.md
+  - type: reading
+    title: Image And Configuration Failures
+    path: sections/section-010/module-03/course-02-image-and-configuration-failures.md
+  - type: reading
+    title: Repair A Failing Deployment — Task
+    path: sections/section-010/module-03/labs/lab-01/question.md
+  - type: lab
+    title: Repair A Failing Deployment
+    path: sections/section-010/module-03/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: workload-failures
+    task_kind: troubleshoot
+    learning_goals:
+    - Read Pod events to find a bad image tag and a missing ConfigMap reference.
+    - Repair the Deployment while keeping the existing ConfigMap unchanged.
+    tags:
+    - cka
+    - pod-states
+    - events
+    resources:
+    - name: Debug Pods
+      url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/
+    - name: Pod lifecycle
+      url: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
+  - type: reading
+    title: Crashes, Evictions And Rollbacks
+    path: sections/section-010/module-03/course-03-crashes-evictions-and-rollbacks.md
+  - type: reading
+    title: Summary
+    path: sections/section-010/module-03/course-04-summary.md
+  - type: reading
+    title: Troubleshoot Clusters And Nodes Capstone — Task
+    path: sections/section-010/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Troubleshoot Clusters And Nodes Capstone
+    path: sections/section-010/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 45m
+    topic: cluster-troubleshooting
+    task_kind: troubleshoot
+    learning_goals:
+    - Find and repair a stopped kubelet, a Pod that cannot be placed and a failing
+      Deployment in one cluster.
+    - Keep the existing taint, disruption budget and ConfigMap unchanged.
+    tags:
+    - cka
+    - capstone
+    - troubleshooting
+    resources:
+    - name: Troubleshooting clusters
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/
+    - name: Debug Pods
+      url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/
+  - type: quiz
+    title: 'Knowledge Check: Troubleshoot Clusters And Nodes'
+    path: sections/section-010/quiz.yaml
+    pass_score: 70
 - id: module-020
   title: Troubleshoot cluster components
   description: Developed explanations and application reasoning for Troubleshoot cluster
     components.
-  maturity: alpha
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot cluster components
@@ -110,20 +211,135 @@ modules:
     tags:
     - cka
     - controller-recovery
-  - type: reading
-    title: Recover A Controller Manager Static Pod — Solution
-    path: sections/section-020/module-01/labs/lab-01/solution.md
+    resources:
+    - name: Kubernetes kube-controller-manager reference
+      url: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/
+    - name: Debug a cluster
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/
   - type: reading
     title: 'Guided Practice: Recover A Controller Manager Static Pod'
     path: sections/section-020/module-01/course-03-guided-practice.md
   - type: reading
     title: Summary
     path: sections/section-020/module-01/course-04-summary.md
+  - type: reading
+    title: API Server And etcd Failures
+    path: sections/section-020/module-02/course.md
+  - type: reading
+    title: Static Pod Manifests And The Kubelet
+    path: sections/section-020/module-02/course-01-static-pod-manifests-and-the-kubelet.md
+  - type: reading
+    title: API Server Flags And Error Types
+    path: sections/section-020/module-02/course-02-api-server-flags-and-error-types.md
+  - type: reading
+    title: etcd Health And Certificates
+    path: sections/section-020/module-02/course-03-etcd-health-and-certificates.md
+  - type: reading
+    title: Recover An API Server With A Wrong etcd Address — Task
+    path: sections/section-020/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Recover An API Server With A Wrong etcd Address
+    path: sections/section-020/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 25m
+    topic: apiserver-etcd-recovery
+    task_kind: troubleshooting
+    learning_goals:
+    - Find a wrong etcd address in a stopped API server from the node and restore
+      it.
+    - Confirm etcd and the API server are healthy and keep a record of the fix.
+    tags:
+    - cka
+    - static-pod
+    - kube-apiserver
+    - etcd
+    resources:
+    - name: Create static Pods
+      url: https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/
+    - name: Debugging Kubernetes nodes with crictl
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/
+    - name: Operating etcd clusters for Kubernetes
+      url: https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/
+    - name: kube-apiserver reference
+      url: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/
+  - type: reading
+    title: Summary
+    path: sections/section-020/module-02/course-04-summary.md
+  - type: reading
+    title: Scheduler Failures And Cluster Add-Ons
+    path: sections/section-020/module-03/course.md
+  - type: reading
+    title: Scheduler Role And Pending Pods
+    path: sections/section-020/module-03/course-01-scheduler-role-and-pending-pods.md
+  - type: reading
+    title: Scheduler Static Pod And Leader Election
+    path: sections/section-020/module-03/course-02-scheduler-static-pod-and-leader-election.md
+  - type: reading
+    title: kube-proxy And kube-system Add-Ons
+    path: sections/section-020/module-03/course-03-kube-proxy-and-kube-system-add-ons.md
+  - type: reading
+    title: Repair A Broken kube-scheduler Static Pod — Task
+    path: sections/section-020/module-03/labs/lab-01/question.md
+  - type: lab
+    title: Repair A Broken kube-scheduler Static Pod
+    path: sections/section-020/module-03/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: scheduler-recovery
+    task_kind: troubleshooting
+    learning_goals:
+    - Restore a kube-scheduler static Pod and confirm its Lease renews.
+    - Confirm Pending Pods are scheduled and new Pods get a node.
+    tags:
+    - cka
+    - static-pod
+    - kube-scheduler
+    - leader-election
+    resources:
+    - name: Kubernetes scheduler
+      url: https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/
+    - name: kube-scheduler reference
+      url: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/
+    - name: Leases
+      url: https://kubernetes.io/docs/concepts/architecture/leases/
+  - type: reading
+    title: Summary
+    path: sections/section-020/module-03/course-04-summary.md
+  - type: reading
+    title: Troubleshoot Cluster Components Capstone — Task
+    path: sections/section-020/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Troubleshoot Cluster Components Capstone
+    path: sections/section-020/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: cluster-components
+    task_kind: troubleshooting
+    learning_goals:
+    - Repair a broken kube-proxy image, controller manager, scheduler and API server
+      in one cluster.
+    - Verify the repairs with workload and Service evidence.
+    tags:
+    - cka
+    - control-plane
+    - kube-proxy
+    - capstone
+    resources:
+    - name: Debug a cluster
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/
+    - name: kube-proxy reference
+      url: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/
+    - name: Create static Pods
+      url: https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/
+  - type: quiz
+    title: 'Knowledge Check: Troubleshoot Cluster Components'
+    path: sections/section-020/quiz.yaml
+    pass_score: 70
 - id: module-030
   title: Monitor cluster and application resource usage
   description: Developed explanations and application reasoning for Monitor cluster
     and application resource usage.
-  maturity: alpha
+  status: alpha
   content:
   - type: reading
     title: Monitor cluster and application resource usage
@@ -144,14 +360,14 @@ modules:
     estimated_duration: 25m
     topic: live-metrics
     task_kind: build
-    learning_goals:
-    - Combine ready workload state with a recent metrics API measurement.
     tags:
     - cka
     - live-metrics
-  - type: reading
-    title: Capture Live Pod Metrics — Solution
-    path: sections/section-030/module-01/labs/lab-01/solution.md
+    learning_goals:
+    - Combine ready workload state with a recent metrics API measurement.
+    resources:
+    - name: Resource metrics pipeline
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
   - type: reading
     title: Expressing Resource Needs For Every Container
     path: sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
@@ -161,11 +377,125 @@ modules:
   - type: reading
     title: Summary
     path: sections/section-030/module-01/course-04-summary.md
+  - type: reading
+    title: Metrics Server And The Metrics API
+    path: sections/section-030/module-02/course.md
+  - type: reading
+    title: How Usage Numbers Reach kubectl Top
+    path: sections/section-030/module-02/course-01-how-usage-numbers-reach-kubectl-top.md
+  - type: reading
+    title: Reading The Metrics API And Its Consumers
+    path: sections/section-030/module-02/course-02-reading-the-metrics-api-and-its-consumers.md
+  - type: reading
+    title: Diagnosing And Repairing A Broken Metrics Server
+    path: sections/section-030/module-02/course-03-diagnosing-and-repairing-a-broken-metrics-server.md
+  - type: reading
+    title: Question
+    path: sections/section-030/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Repair metrics-server Lab
+    path: sections/section-030/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: metrics-server
+    task_kind: repair
+    tags:
+    - cka
+    - metrics-server
+    - metrics-api
+    - kubectl-top
+    - apiservice
+    learning_goals:
+    - Find why metrics-server cannot scrape the kubelets from the APIService status
+      and the logs
+    - Repair the existing Deployment with a JSON patch and prove it with kubectl top
+    resources:
+    - name: Resource metrics pipeline
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
+    - name: Kubernetes API aggregation layer
+      url: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/
+  - type: reading
+    title: Summary
+    path: sections/section-030/module-02/course-04-summary.md
+  - type: reading
+    title: Requests, Limits, OOM Kills And Quotas
+    path: sections/section-030/module-03/course.md
+  - type: reading
+    title: QoS Classes And How Limits Are Enforced
+    path: sections/section-030/module-03/course-01-qos-classes-and-how-limits-are-enforced.md
+  - type: reading
+    title: Diagnosing OOMKilled And Node Capacity
+    path: sections/section-030/module-03/course-02-diagnosing-oomkilled-and-node-capacity.md
+  - type: reading
+    title: ResourceQuota, LimitRange And Admission
+    path: sections/section-030/module-03/course-03-resourcequota-limitrange-and-admission.md
+  - type: reading
+    title: Question
+    path: sections/section-030/module-03/labs/lab-01/question.md
+  - type: lab
+    title: Fix OOMKilled And Quota Rejections Lab
+    path: sections/section-030/module-03/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 25m
+    topic: resource-limits
+    task_kind: repair
+    tags:
+    - cka
+    - oomkilled
+    - resourcequota
+    - limitrange
+    - requests-limits
+    learning_goals:
+    - Prove an OOM kill from the container status and choose a limit that fits
+    - Raise a namespace quota to fit the fix without deleting it
+    - Fix a Deployment rejected by a quota with a LimitRange default
+    resources:
+    - name: Resource management for Pods and containers
+      url: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    - name: Resource quotas
+      url: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+    - name: Limit ranges
+      url: https://kubernetes.io/docs/concepts/policy/limit-range/
+  - type: reading
+    title: Summary
+    path: sections/section-030/module-03/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-030/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Resource Monitoring Capstone
+    path: sections/section-030/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: resource-monitoring
+    task_kind: repair
+    tags:
+    - cka
+    - metrics-server
+    - oomkilled
+    - resourcequota
+    - limitrange
+    - capstone
+    learning_goals:
+    - Repair metrics-server in place
+    - Fix an OOMKilled workload and a quota rejection without removing policy
+    - Capture a recent Pod metrics report as evidence
+    resources:
+    - name: Resource metrics pipeline
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
+    - name: Resource quotas
+      url: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+    - name: Limit ranges
+      url: https://kubernetes.io/docs/concepts/policy/limit-range/
+  - type: quiz
+    title: 'Knowledge Check: Monitor cluster and application resource usage'
+    path: sections/section-030/quiz.yaml
+    pass_score: 70
 - id: module-040
   title: Manage and evaluate container output streams
   description: Developed explanations and application reasoning for Manage and evaluate
     container output streams.
-  maturity: alpha
+  status: alpha
   content:
   - type: reading
     title: Manage and evaluate container output streams
@@ -194,20 +524,133 @@ modules:
     tags:
     - cka
     - previous-logs
-  - type: reading
-    title: Diagnose A Previous Container Exit — Solution
-    path: sections/section-040/module-01/labs/lab-01/solution.md
+    resources:
+    - name: Logging architecture
+      url: https://kubernetes.io/docs/concepts/cluster-administration/logging/
+    - name: kubectl logs reference
+      url: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/
   - type: reading
     title: 'Guided Practice: Diagnose A Previous Container Exit'
     path: sections/section-040/module-01/course-03-guided-practice.md
   - type: reading
     title: Summary
     path: sections/section-040/module-01/course-04-summary.md
+  - type: reading
+    title: Multi-Container Logs And Debug Access
+    path: sections/section-040/module-02/course.md
+  - type: reading
+    title: Reading Logs Of Containers, Init Containers And Pod Sets
+    path: sections/section-040/module-02/course-01-reading-logs-of-containers-init-containers-and-pod-sets.md
+  - type: reading
+    title: Collect A Container Error And Fix An Init Container — Task
+    path: sections/section-040/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Collect A Container Error And Fix An Init Container
+    path: sections/section-040/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: multi-container-logs
+    task_kind: build
+    learning_goals:
+    - Select the failing container of a multi-container Pod and record its error code.
+    - Diagnose a failing init container from its log and fix its input.
+    tags:
+    - cka
+    - logs
+    - init-containers
+    - multi-container
+    resources:
+    - name: kubectl logs reference
+      url: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/
+    - name: Init containers
+      url: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    - name: Debug init containers
+      url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-init-containers/
+  - type: reading
+    title: Sidecar Containers That Stream Log Files
+    path: sections/section-040/module-02/course-02-sidecar-containers-that-stream-log-files.md
+  - type: reading
+    title: Debugging With Exec And Ephemeral Containers
+    path: sections/section-040/module-02/course-03-debugging-with-exec-and-ephemeral-containers.md
+  - type: reading
+    title: Summary
+    path: sections/section-040/module-02/course-04-summary.md
+  - type: reading
+    title: Node-Level And Component Logs
+    path: sections/section-040/module-03/course.md
+  - type: reading
+    title: Where Container Logs Live On The Node
+    path: sections/section-040/module-03/course-01-where-container-logs-live-on-the-node.md
+  - type: reading
+    title: Reading The Kubelet And Runtime With journalctl And crictl
+    path: sections/section-040/module-03/course-02-reading-the-kubelet-and-runtime-with-journalctl-and-crictl.md
+  - type: reading
+    title: Find Evidence In Node-Level Logs And Fix A Kubelet-Visible Fault — Task
+    path: sections/section-040/module-03/labs/lab-01/question.md
+  - type: lab
+    title: Find Evidence In Node-Level Logs And Fix A Kubelet-Visible Fault
+    path: sections/section-040/module-03/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 25m
+    topic: node-logs
+    task_kind: build
+    learning_goals:
+    - Find a container log file under /var/log/pods on a node.
+    - Find a pull error in the kubelet journal and repair the workload.
+    tags:
+    - cka
+    - node-logs
+    - kubelet
+    - journalctl
+    resources:
+    - name: Logging architecture
+      url: https://kubernetes.io/docs/concepts/cluster-administration/logging/
+    - name: Debugging Kubernetes nodes with crictl
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/
+    - name: Troubleshooting clusters
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/
+  - type: reading
+    title: Control Plane Component Logs
+    path: sections/section-040/module-03/course-03-control-plane-component-logs.md
+  - type: reading
+    title: Summary
+    path: sections/section-040/module-03/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-040/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Output Streams And Runtime Evidence Capstone
+    path: sections/section-040/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: container-output-streams
+    task_kind: build
+    learning_goals:
+    - Collect restart, container log and node log evidence into one report.
+    - Repair a failing init container and an image pull failure using logs and the
+      kubelet journal.
+    tags:
+    - cka
+    - logs
+    - kubelet
+    - init-containers
+    - crictl
+    resources:
+    - name: Logging architecture
+      url: https://kubernetes.io/docs/concepts/cluster-administration/logging/
+    - name: Debug running Pods
+      url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
+    - name: Debugging Kubernetes nodes with crictl
+      url: https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/
+  - type: quiz
+    title: 'Knowledge Check: Manage and evaluate container output streams'
+    path: sections/section-040/quiz.yaml
+    pass_score: 70
 - id: module-050
   title: Troubleshoot services and networking
   description: Developed explanations and application reasoning for Troubleshoot services
     and networking.
-  maturity: alpha
+  status: alpha
   content:
   - type: reading
     title: Troubleshoot services and networking
@@ -235,9 +678,6 @@ modules:
     - cka
     - service-selector
   - type: reading
-    title: Repair A Service Selector — Solution
-    path: sections/section-050/module-01/labs/lab-01/solution.md
-  - type: reading
     title: Tracing An External Request To The Application
     path: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
   - type: reading
@@ -257,11 +697,118 @@ modules:
     - cka
     - ingress-backend
   - type: reading
-    title: Repair A Missing Ingress Backend — Solution
-    path: sections/section-050/module-01/labs/lab-02/solution.md
-  - type: reading
     title: 'Guided Practice: Repair A Service Selector'
     path: sections/section-050/module-01/course-03-guided-practice.md
   - type: reading
     title: Summary
     path: sections/section-050/module-01/course-04-summary.md
+  - type: reading
+    title: Cluster DNS Troubleshooting
+    path: sections/section-050/module-02/course.md
+  - type: reading
+    title: CoreDNS And The Cluster DNS Service
+    path: sections/section-050/module-02/course-01-coredns-and-the-cluster-dns-service.md
+  - type: reading
+    title: Search Domains, ndots And Lookups
+    path: sections/section-050/module-02/course-02-search-domains-ndots-and-lookups.md
+  - type: reading
+    title: CoreDNS Logs And Repairing The Corefile
+    path: sections/section-050/module-02/course-03-coredns-logs-and-repairing-the-corefile.md
+  - type: reading
+    title: Repair Cluster DNS — Task
+    path: sections/section-050/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Repair Cluster DNS
+    path: sections/section-050/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 30m
+    topic: cluster-dns
+    task_kind: build
+    learning_goals:
+    - Find a misspelled cluster zone in the Corefile and repair it.
+    - Restore CoreDNS and confirm Service lookups work again.
+    tags:
+    - cka
+    - coredns
+    - cluster-dns
+    resources:
+    - name: Debugging DNS resolution
+      url: https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
+    - name: Customizing DNS service
+      url: https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/
+    - name: DNS for Services and Pods
+      url: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
+  - type: reading
+    title: Summary
+    path: sections/section-050/module-02/course-04-summary.md
+  - type: reading
+    title: Endpoints, Probes And NetworkPolicy
+    path: sections/section-050/module-03/course.md
+  - type: reading
+    title: EndpointSlices, Target Ports And Readiness
+    path: sections/section-050/module-03/course-01-endpointslices-target-ports-and-readiness.md
+  - type: reading
+    title: 'Testing Services: Port-Forward, Debug Pods And NodePort'
+    path: sections/section-050/module-03/course-02-testing-services-port-forward-debug-pods-and-nodeport.md
+  - type: reading
+    title: 'NetworkPolicy: Default Deny And Allow Rules'
+    path: sections/section-050/module-03/course-03-networkpolicy-default-deny-and-allow-rules.md
+  - type: reading
+    title: Repair A Service Port And A Deny Policy — Task
+    path: sections/section-050/module-03/labs/lab-01/question.md
+  - type: lab
+    title: Repair A Service Port And A Deny Policy
+    path: sections/section-050/module-03/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 35m
+    topic: service-port-networkpolicy
+    task_kind: build
+    learning_goals:
+    - Correct a Service target port so the endpoints use the container port.
+    - Add a narrow allow rule that keeps the default deny in place.
+    tags:
+    - cka
+    - endpointslices
+    - networkpolicy
+    resources:
+    - name: Service
+      url: https://kubernetes.io/docs/concepts/services-networking/service/
+    - name: EndpointSlices
+      url: https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/
+    - name: Network Policies
+      url: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+  - type: reading
+    title: Summary
+    path: sections/section-050/module-03/course-04-summary.md
+  - type: reading
+    title: Troubleshoot Services And Networking Capstone — Task
+    path: sections/section-050/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Troubleshoot Services And Networking Capstone
+    path: sections/section-050/capstone/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 45m
+    topic: services-networking-capstone
+    task_kind: build
+    learning_goals:
+    - Repair DNS, a Service port and a network policy in one cluster, finding each
+      fault from its symptom.
+    tags:
+    - cka
+    - capstone
+    - networking
+    resources:
+    - name: Debugging Services
+      url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/
+    - name: Debugging DNS resolution
+      url: https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
+    - name: Network Policies
+      url: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+  - type: quiz
+    title: 'Knowledge Check: Troubleshoot services and networking'
+    path: sections/section-050/quiz.yaml
+    pass_score: 70
+  - type: quiz
+    title: 'Final Domain Quiz: Troubleshooting'
+    path: sections/final-domain-quiz.yaml
+    pass_score: 70

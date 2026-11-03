@@ -11,7 +11,7 @@ scope:
   title: Monitor cluster and application resource usage
 placement:
   position: after
-  reading: sections/section-030/module-01/course-03-summary.md
+  reading: sections/section-030/module-01/course-04-summary.md
 questions:
 - id: ats023-section-030-q01
   type: single_choice

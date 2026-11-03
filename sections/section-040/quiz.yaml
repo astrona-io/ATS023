@@ -1,0 +1,348 @@
+# Knowledge check for section 040. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats023-040
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-040
+  title: "Manage and evaluate container output streams"
+questions:
+  - id: ats023-040-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Read the log of the previous instance of a restarting container"
+    source_readings:
+      - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+    prompt: |-
+      The `report` container in Pod `crash-report` in `starfleet` has restarted three times. Its current log shows only the start line. Which command shows what the instance that failed last printed?
+    options:
+      - id: a
+        text: "`kubectl -n starfleet logs crash-report --follow`"
+        explanation: "`--follow` waits for new lines of the current instance and never shows the ended one."
+      - id: b
+        text: "`kubectl -n starfleet logs crash-report -c report --tail=-1 --since=0s`"
+        explanation: "These flags still select the current instance, so the earlier output stays hidden."
+      - id: c
+        text: "`kubectl -n starfleet logs crash-report -c report --previous`"
+        explanation: "Correct. `--previous` asks for the log of the last terminated instance of the named container."
+      - id: d
+        text: "`kubectl -n starfleet logs deploy/crash-report`"
+        explanation: "`crash-report` is a Pod, not a Deployment, so this form does not apply."
+    correct_option: c
+    explanation: "Correct. `--previous` asks for the log of the last terminated instance of the named container."
+
+  - id: ats023-040-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Interpret termination evidence and the crash-loop back-off"
+    source_readings:
+      - sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
+    prompt: |-
+      A container shows the status `CrashLoopBackOff`, a restart count of 9 and a last terminated state with exit code 12 and reason `Error`. What does this evidence say?
+    options:
+      - id: a
+        text: "The kubelet delays restarts because the process keeps exiting by itself with a nonzero status; the back-off is not the cause."
+        explanation: "Correct. Exit code 12 with reason `Error` means the process ended on its own, and the back-off is only the kubelet's delay between restarts."
+      - id: b
+        text: "The container ran out of memory, because every crash loop is a memory termination."
+        explanation: "A memory termination has the reason `OOMKilled`, not `Error`."
+      - id: c
+        text: "The node is down, because the status `CrashLoopBackOff` is set by the node controller."
+        explanation: "The kubelet sets this status, and a down node shows as a node condition instead."
+      - id: d
+        text: "The image cannot be pulled, because back-off always follows a failed pull."
+        explanation: "A failed pull shows `ErrImagePull` or `ImagePullBackOff` and no container ever started."
+    correct_option: a
+    explanation: "Correct. Exit code 12 with reason `Error` means the process ended on its own, and the back-off is only the kubelet's delay between restarts."
+
+  - id: ats023-040-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Select every replica with attribution"
+    source_readings:
+      - sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
+    prompt: |-
+      The `probe` Deployment has four replicas and an error appears in only one of them during a rollout. You want the last 20 lines of every replica, each line marked with its Pod. Which command does this?
+    options:
+      - id: a
+        text: "`kubectl -n starfleet logs deploy/probe --tail=20`"
+        explanation: "The `deploy/` form reads one Pod only, so three replicas stay unread."
+      - id: b
+        text: "`kubectl -n starfleet logs probe --all-containers`"
+        explanation: "`probe` is not the name of a Pod and the flag selects containers, not replicas."
+      - id: c
+        text: "`kubectl -n starfleet logs -l app=probe --previous`"
+        explanation: "`--previous` selects the earlier instance, not all replicas, and gives no prefix."
+      - id: d
+        text: "`kubectl -n starfleet logs -l app=probe --tail=20 --prefix`"
+        explanation: "Correct. A label selector reads every matching Pod, `--tail` bounds each one and `--prefix` names the source."
+    correct_option: d
+    explanation: "Correct. A label selector reads every matching Pod, `--tail` bounds each one and `--prefix` names the source."
+
+  - id: ats023-040-q04
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Select a container in a multi-container Pod"
+    source_readings:
+      - sections/section-040/module-02/course-01-reading-logs-of-containers-init-containers-and-pod-sets.md
+    prompt: |-
+      Pod `probe` has the containers `api` and `worker`. `kubectl logs probe` prints healthy request lines, but users report errors. What is the most likely mistake?
+    options:
+      - id: a
+        text: "`kubectl logs` only shows output of init containers."
+        explanation: "Init containers are only shown when selected or with `--all-containers`."
+      - id: b
+        text: "The command read the default first container, and the error is in `worker`."
+        explanation: "Correct. Without `-c`, kubectl reads one default container. The error lines are in the other container, so read it with `-c worker`."
+      - id: c
+        text: "Errors are never written to container logs."
+        explanation: "Standard error is captured like standard output."
+      - id: d
+        text: "The API server filtered the error lines."
+        explanation: "The API server does not filter content; it forwards what the kubelet reads."
+    correct_option: b
+    explanation: "Correct. Without `-c`, kubectl reads one default container. The error lines are in the other container, so read it with `-c worker`."
+
+  - id: ats023-040-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Find an init container failure"
+    source_readings:
+      - sections/section-040/module-02/course-01-reading-logs-of-containers-init-containers-and-pod-sets.md
+    prompt: |-
+      A Pod stays in the status `Init:CrashLoopBackOff` and its main container shows no log. Where is the first useful evidence?
+    options:
+      - id: a
+        text: "The log of the main container with `--previous`."
+        explanation: "The main container never started, so it has no previous instance."
+      - id: b
+        text: "The kubelet configuration file."
+        explanation: "The kubelet settings do not explain why one process exits."
+      - id: c
+        text: "The log of the failing init container, read with `-c <init-container-name>`."
+        explanation: "Correct. Init containers must finish before the main containers start, and the failing one has its own log."
+      - id: d
+        text: "The log of the scheduler."
+        explanation: "The Pod is already scheduled, so the scheduler log does not explain the exit."
+    correct_option: c
+    explanation: "Correct. Init containers must finish before the main containers start, and the failing one has its own log."
+
+  - id: ats023-040-q06
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Make a file log visible with a sidecar"
+    source_readings:
+      - sections/section-040/module-02/course-02-sidecar-containers-that-stream-log-files.md
+    prompt: |-
+      An application writes its log to `/var/log/app/events.log` and prints nothing to standard output. `kubectl logs` is empty. Which change makes the events appear in `kubectl logs` without changing the application?
+    options:
+      - id: a
+        text: "Raise `containerLogMaxSize` in the kubelet configuration."
+        explanation: "Rotation settings do not make a file appear in the container log."
+      - id: b
+        text: "Add `--previous` to the command."
+        explanation: "`--previous` selects an earlier instance and does not read files."
+      - id: c
+        text: "Mount the file with `readOnly: true` in the application container."
+        explanation: "A read-only mount does not change what the runtime captures."
+      - id: d
+        text: "Add a sidecar that mounts the same `emptyDir` volume and runs `tail -F /var/log/app/events.log`."
+        explanation: "Correct. The sidecar prints the file to its own standard output, which the runtime captures."
+    correct_option: d
+    explanation: "Correct. The sidecar prints the file to its own standard output, which the runtime captures."
+
+  - id: ats023-040-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose the right debug tool for a Pod without a shell"
+    source_readings:
+      - sections/section-040/module-02/course-03-debugging-with-exec-and-ephemeral-containers.md
+    prompt: |-
+      The `worker` container image has no shell and no tools. The Pod is running and you must not restart it. Which tool lets you run network checks in the Pod?
+    options:
+      - id: a
+        text: "`kubectl debug -it <pod> --image=busybox:1.37.0 --target=worker`"
+        explanation: "Correct. An ephemeral container brings its own image and tools, and `--target` joins the process namespace of the named container."
+      - id: b
+        text: "`kubectl exec worker -- sh`"
+        explanation: "Exec needs a shell inside the image, so it fails."
+      - id: c
+        text: "`kubectl logs --previous`"
+        explanation: "The log does not run checks."
+      - id: d
+        text: "`kubectl delete pod` and watch the new one"
+        explanation: "Deleting the Pod removes the state you want to inspect."
+    correct_option: a
+    explanation: "Correct. An ephemeral container brings its own image and tools, and `--target` joins the process namespace of the named container."
+
+  - id: ats023-040-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Debug a crashing container without changing the original"
+    source_readings:
+      - sections/section-040/module-02/course-03-debugging-with-exec-and-ephemeral-containers.md
+    prompt: |-
+      The `app` container in Pod `bridge` crashes at start. You want a shell in a Pod with the same specification, with the command of `app` replaced, while the original stays untouched. Which command does that?
+    options:
+      - id: a
+        text: "`kubectl exec -it bridge -c app -- sh`"
+        explanation: "Exec fails when the container is not running."
+      - id: b
+        text: "`kubectl debug bridge -it --copy-to=bridge-debug --container=app -- sh`"
+        explanation: "Correct. `--copy-to` creates a new Pod, and `--container` with a command replaces the command of that container in the copy only."
+      - id: c
+        text: "`kubectl edit pod bridge`"
+        explanation: "Editing the original destroys the evidence."
+      - id: d
+        text: "`kubectl debug node/<node> -it --image=busybox:1.37.0`"
+        explanation: "A node debug Pod does not copy the Pod."
+    correct_option: b
+    explanation: "Correct. `--copy-to` creates a new Pod, and `--container` with a command replaces the command of that container in the copy only."
+
+  - id: ats023-040-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Locate the container log file on the node"
+    source_readings:
+      - sections/section-040/module-03/course-01-where-container-logs-live-on-the-node.md
+    prompt: |-
+      You have shell access on the node that runs Pod `beacon-logger` in `starfleet`, and the API server is unreachable. Where is the log file of its container `logger` from the first run?
+    options:
+      - id: a
+        text: "`/etc/kubernetes/manifests/logger.log`"
+        explanation: "That directory holds static Pod manifests, not logs."
+      - id: b
+        text: "`/var/lib/kubelet/config.yaml`"
+        explanation: "That file holds kubelet settings."
+      - id: c
+        text: "`/var/log/kubelet/logger/0.log`"
+        explanation: "The kubelet does not use this directory for container logs."
+      - id: d
+        text: "`/var/log/pods/starfleet_beacon-logger_<uid>/logger/0.log`"
+        explanation: "Correct. The kubelet stores logs as `<namespace>_<pod>_<uid>/<container>/<restart-number>.log` under `/var/log/pods`."
+    correct_option: d
+    explanation: "Correct. The kubelet stores logs as `<namespace>_<pod>_<uid>/<container>/<restart-number>.log` under `/var/log/pods`."
+
+  - id: ats023-040-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain rotation limits of kubectl logs"
+    source_readings:
+      - sections/section-040/module-03/course-01-where-container-logs-live-on-the-node.md
+    prompt: |-
+      A container wrote 45 MiB with the default kubelet settings. `kubectl logs` returns far less than 45 MiB. Why?
+    options:
+      - id: a
+        text: "The API server truncates every response to 1 MiB."
+        explanation: "The API server does not apply this fixed limit."
+      - id: b
+        text: "The container wrote to standard error and kubectl hides it."
+        explanation: "kubectl returns both standard output and standard error."
+      - id: c
+        text: "The runtime rotated the file at `containerLogMaxSize` and `kubectl logs` reads only the newest file."
+        explanation: "Correct. The default size is 10Mi and the command returns only the newest file, so older files exist only on the node."
+      - id: d
+        text: "The Pod uses the wrong `restartPolicy`."
+        explanation: "The restart policy does not change what a log request returns."
+    correct_option: c
+    explanation: "Correct. The default size is 10Mi and the command returns only the newest file, so older files exist only on the node."
+
+  - id: ats023-040-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use the kubelet journal for a failure before any container"
+    source_readings:
+      - sections/section-040/module-03/course-02-reading-the-kubelet-and-runtime-with-journalctl-and-crictl.md
+    prompt: |-
+      A Pod shows `ImagePullBackOff` and has no container log. On the node you want the exact image reference the kubelet tried to pull. Where do you look?
+    options:
+      - id: a
+        text: "`kubectl logs --previous` of the Pod."
+        explanation: "No container ever ran, so there is no previous instance."
+      - id: b
+        text: "`journalctl -u kubelet --no-pager --since \"10 minutes ago\"` filtered on the Pod or image name."
+        explanation: "Correct. The kubelet is a systemd service, and its journal records the pull attempt and the error."
+      - id: c
+        text: "`/var/log/pods/<pod>/0.log`."
+        explanation: "No container started, so no file exists for it."
+      - id: d
+        text: "`crictl logs` of the main container."
+        explanation: "There is no container to read logs from."
+    correct_option: b
+    explanation: "Correct. The kubelet is a systemd service, and its journal records the pull attempt and the error."
+
+  - id: ats023-040-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use crictl to inspect containers on a node"
+    source_readings:
+      - sections/section-040/module-03/course-02-reading-the-kubelet-and-runtime-with-journalctl-and-crictl.md
+    prompt: |-
+      On a node you need the list of all containers, including exited ones, without asking the API server. Which command do you run?
+    options:
+      - id: a
+        text: "`crictl ps -a`"
+        explanation: "Correct. `crictl ps -a` asks the runtime directly and includes exited containers."
+      - id: b
+        text: "`kubectl get pods -A`"
+        explanation: "This needs the API server."
+      - id: c
+        text: "`journalctl -u containerd --no-pager`"
+        explanation: "This prints runtime service messages, not a container list."
+      - id: d
+        text: "`ls /var/log/containers`"
+        explanation: "This lists links to log files and omits containers without a file."
+    correct_option: a
+    explanation: "Correct. `crictl ps -a` asks the runtime directly and includes exited containers."
+
+  - id: ats023-040-q13
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Read a control plane component when the API server is down"
+    source_readings:
+      - sections/section-040/module-03/course-03-control-plane-component-logs.md
+    prompt: |-
+      `kubectl` times out because the API server container exited after a manifest edit. How do you read its last log lines?
+    options:
+      - id: a
+        text: "`kubectl -n kube-system logs kube-apiserver-<node> --previous`"
+        explanation: "kubectl needs the API server that is down."
+      - id: b
+        text: "Delete the mirror Pod to force a restart."
+        explanation: "The mirror Pod cannot be deleted through a dead API and deleting hides the log."
+      - id: c
+        text: "Read `/etc/kubernetes/manifests/kube-apiserver.yaml` for log lines."
+        explanation: "The manifest holds the specification, not the log."
+      - id: d
+        text: "On the control plane node run `crictl ps -a --name kube-apiserver`, then `crictl logs --tail=20 <container-id>`."
+        explanation: "Correct. The kubelet and the runtime still work, so `crictl` reads the exited container and its log."
+    correct_option: d
+    explanation: "Correct. The kubelet and the runtime still work, so `crictl` reads the exited container and its log."
+
+  - id: ats023-040-q14
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose which component log answers a question"
+    source_readings:
+      - sections/section-040/module-03/course-03-control-plane-component-logs.md
+    prompt: |-
+      A new Pod stays `Pending` with the event `FailedScheduling`. You want more detail on why no node was chosen. Which log do you read first?
+    options:
+      - id: a
+        text: "The `kube-scheduler` Pod log in `kube-system`"
+        explanation: "Correct. The scheduler decides placement and logs why nodes were rejected."
+      - id: b
+        text: "The `etcd` log"
+        explanation: "etcd shows storage problems, not placement."
+      - id: c
+        text: "The `kube-proxy` log on one node"
+        explanation: "kube-proxy handles Service traffic, not scheduling."
+      - id: d
+        text: "The log of the container in the Pending Pod"
+        explanation: "The Pending Pod has no container yet, so it has no log."
+    correct_option: a
+    explanation: "Correct. The scheduler decides placement and logs why nodes were rejected."

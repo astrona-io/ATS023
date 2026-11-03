@@ -1,5 +1,6 @@
 version: 1
-approval: CKA requested 2026-10-11; established reading-only scope
+approval: Maintainer requested CKA and CKS playgrounds and graded labs on 2026-10-13,
+  superseding the earlier reading-only scope.
 course:
   id: ATS023
   certification:
@@ -15,7 +16,7 @@ course:
     - Manage and evaluate container output streams
     - Troubleshoot services and networking
 defaults:
-  playground: false
+  playground: true
   module_lab: false
   capstone: false
   section_quiz: true
@@ -38,13 +39,25 @@ sections:
     outline:
     - Diagnosing Node Readiness And Host Dependencies
     - Node Health And Shared Dependencies
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
       adapted_from: null
     - reading: sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
       adapted_from: ATS038/sections/section-030/module-02/course-01-node-health-and-shared-dependencies.md
+    - reading: sections/section-010/module-01/course-03-guided-practice.md
+      adapted_from: null
+    labs:
+    - id: lab-01
+      path: sections/section-010/module-01/labs/lab-01
+      after_reading: sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
+      objective: Trace a worker readiness failure to its stopped kubelet service and
+        restore it.
+      status: draft
+      runtime_verification: pending
+    practice_readings:
+    - sections/section-010/module-01/course-03-guided-practice.md
 - id: section-020
   title: Troubleshoot cluster components
   curriculum_item: Troubleshoot cluster components
@@ -61,13 +74,25 @@ sections:
     outline:
     - Control Plane And Worker Responsibilities
     - Locating A Control-Plane Component Failure
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-020/module-01/course-01-control-plane-and-worker-responsibilities.md
       adapted_from: ATS037/sections/section-010/module-01/course-01-control-plane-and-worker-responsibilities.md
     - reading: sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
       adapted_from: null
+    - reading: sections/section-020/module-01/course-03-guided-practice.md
+      adapted_from: null
+    labs:
+    - id: lab-01
+      path: sections/section-020/module-01/labs/lab-01
+      after_reading: sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+      objective: Repair an invalid controller-manager flag and verify that Deployment
+        reconciliation resumes.
+      status: draft
+      runtime_verification: pending
+    practice_readings:
+    - sections/section-020/module-01/course-03-guided-practice.md
 - id: section-030
   title: Monitor cluster and application resource usage
   curriculum_item: Monitor cluster and application resource usage
@@ -84,13 +109,24 @@ sections:
     outline:
     - Choosing Diagnostic Evidence With kubectl
     - Expressing Resource Needs For Every Container
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
       adapted_from: ATS028/sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
     - reading: sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
       adapted_from: ATS029/sections/section-050/module-01/course-01-expressing-resource-needs-for-every-container.md
+    - reading: sections/section-030/module-01/course-03-guided-practice.md
+      adapted_from: null
+    labs:
+    - id: lab-01
+      path: sections/section-030/module-01/labs/lab-01
+      after_reading: sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+      objective: Combine ready workload state with a recent metrics API measurement.
+      status: draft
+      runtime_verification: pending
+    practice_readings:
+    - sections/section-030/module-01/course-03-guided-practice.md
 - id: section-040
   title: Manage and evaluate container output streams
   curriculum_item: Manage and evaluate container output streams
@@ -107,13 +143,25 @@ sections:
     outline:
     - Selecting The Right Container Log And Time Window
     - Logs, Exits And Crash Loops
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-040/module-01/course-01-selecting-the-right-container-log-and-time-window.md
       adapted_from: ATS028/sections/section-040/module-01/course-02-selecting-the-right-container-log-and-time-window.md
     - reading: sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
       adapted_from: ATS039/sections/section-020/module-01/course-01-logs-exits-and-crash-loops.md
+    - reading: sections/section-040/module-01/course-03-guided-practice.md
+      adapted_from: null
+    labs:
+    - id: lab-01
+      path: sections/section-040/module-01/labs/lab-01
+      after_reading: sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
+      objective: Select the previous container log and record the corresponding exit
+        evidence.
+      status: draft
+      runtime_verification: pending
+    practice_readings:
+    - sections/section-040/module-01/course-03-guided-practice.md
 - id: section-050
   title: Troubleshoot services and networking
   curriculum_item: Troubleshoot services and networking
@@ -130,10 +178,29 @@ sections:
     outline:
     - Tracing A Service Request
     - Tracing An External Request To The Application
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-050/module-01/course-01-tracing-a-service-request.md
       adapted_from: ATS038/sections/section-030/module-02/course-02-tracing-a-service-request.md
     - reading: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
       adapted_from: ATS030/sections/section-030/module-02/course-01-tracing-an-external-request-to-the-application.md
+    - reading: sections/section-050/module-01/course-03-guided-practice.md
+      adapted_from: null
+    labs:
+    - id: lab-01
+      path: sections/section-050/module-01/labs/lab-01
+      after_reading: sections/section-050/module-01/course-01-tracing-a-service-request.md
+      objective: Restore backend selection while preserving the existing client and
+        listener ports.
+      status: draft
+      runtime_verification: pending
+    - id: lab-02
+      path: sections/section-050/module-01/labs/lab-02
+      after_reading: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+      objective: Trace a failed external route to a nonexistent backend reference
+        and repair it.
+      status: draft
+      runtime_verification: pending
+    practice_readings:
+    - sections/section-050/module-01/course-03-guided-practice.md

@@ -1,0 +1,66 @@
+# Recover An API Server With A Wrong etcd Address (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-020-02-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/python:3.13-alpine
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+
+# Starting state: the Starfleet workloads run, then the API server manifest
+# gets a wrong etcd port. The fault is left in place on purpose.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads, then break the etcd address in the API server manifest
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Repair the manifest and record the result
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: etcd-flag-restored
+    description: The API server manifest uses the etcd client port and the manifest directory is clean
+    type: file
+    source: validation/validate-etcd-flag-restored.sh
+    hint: Find the port in the --etcd-servers flag, compare it with --listen-client-urls in the etcd manifest, and keep backups out of /etc/kubernetes/manifests.
+  - name: apiserver-ready
+    description: The API server is ready and its container runs
+    type: file
+    source: validation/validate-apiserver-ready.sh
+    hint: The kubelet rescans the manifest directory every 20 seconds, then the API server needs time to start. Check crictl ps -a on the node.
+  - name: etcd-healthy
+    description: etcd is unchanged and healthy
+    type: file
+    source: validation/validate-etcd-healthy.sh
+    hint: etcd was never broken. Do not edit etcd.yaml. Test it with etcdctl endpoint health and the four flags.
+  - name: recovery-record
+    description: The ConfigMap apiserver-recovery records the wrong flag and the etcd client port
+    type: file
+    source: validation/validate-recovery-record.sh
+    hint: After the API works, create the ConfigMap in starfleet with the keys flag and etcd-client-port.
+  - name: workloads-intact
+    description: probe and shuttle still run and the API accepts writes
+    type: file
+    source: validation/validate-workloads-intact.sh
+    hint: Do not recreate the cluster or delete workloads; the repair is one flag on the node.
+
+teardown:
+  keepCluster: false

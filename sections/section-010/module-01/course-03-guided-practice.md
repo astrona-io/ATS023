@@ -29,7 +29,7 @@ kubectl -n starfleet get pods -o wide
 kubectl get nodes -o wide
 ```
 
-The lab deliberately stops the worker kubelet after its fixtures become healthy. Restart that kubelet, leave the worker schedulable and Ready, and record ConfigMap `node-recovery` with component kubelet, the exact worker node name and result ready. Keep all control-plane components running.
+The playground stops the worker kubelet after its fixtures become healthy. Restart that kubelet, leave the worker schedulable and Ready, and record ConfigMap `node-recovery` with component kubelet, the exact worker node name and result ready. Keep all control-plane components running.
 
 Save this as `configmap-node-recovery.yaml`:
 
@@ -54,13 +54,13 @@ kubectl apply -f configmap-node-recovery.yaml
 
 ## Verify The Result
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+Wait for the node to report `Ready` again. The kubelet needs a short time to post a fresh status, so a bounded wait is better than a repeated manual check.
 
 ```sh
 kubectl wait --for=condition=Ready node/"$worker_name" --timeout=240s
 ```
 
-Trace a worker readiness failure to its stopped kubelet service and restore it. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+The command ends when the `Ready` condition is `True`. A matching field in the ConfigMap alone does not prove the repair: the node condition is the evidence that the kubelet reports again. Keep the control plane components running while you work.
 
 
 ## Common pitfalls

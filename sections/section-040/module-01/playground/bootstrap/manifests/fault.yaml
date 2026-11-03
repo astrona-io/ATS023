@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crash-report
+  namespace: starfleet
+spec:
+  restartPolicy: Always
+  containers:
+  - name: report
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - printf "application-started\n"; sleep 2; exit 12

@@ -1,0 +1,60 @@
+# Repair A Failing Deployment (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-010-03-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+# Starting state: the probe Deployment uses an image tag that does not exist and
+# reads GREETING from a ConfigMap name that does not exist.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the ConfigMap and the failing probe Deployment
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: image-tag-fixed
+    description: The probe image is busybox 1.37.0
+    type: file
+    source: validation/validate-image-tag-fixed.sh
+    hint: Read the ErrImagePull event, then set the image of the probe container to docker.io/library/busybox:1.37.0.
+  - name: configmap-reference-fixed
+    description: GREETING still comes from the ConfigMap probe-config key greeting
+    type: file
+    source: validation/validate-configmap-reference-fixed.sh
+    hint: Read the CreateContainerConfigError event and point the configMapKeyRef at the ConfigMap that exists. Do not replace it with a fixed value.
+  - name: configmap-intact
+    description: The ConfigMap probe-config still holds greeting=hello
+    type: file
+    source: validation/validate-configmap-intact.sh
+    hint: Do not edit the ConfigMap. The Deployment is wrong, not the ConfigMap.
+  - name: probe-running
+    description: Both probe replicas are Ready and no Pod is waiting
+    type: file
+    source: validation/validate-probe-running.sh
+    hint: Wait for the rollout with kubectl rollout status, then list the Pods. Do not scale the Deployment down or delete it.
+  - name: probe-reads-greeting
+    description: A running probe Pod sees GREETING=hello
+    type: file
+    source: validation/validate-probe-reads-greeting.sh
+    hint: Run printenv GREETING inside a probe Pod with kubectl exec.
+teardown:
+  keepCluster: false

@@ -1,0 +1,575 @@
+# Final domain quiz. Listed in astrona.yaml as the last entry.
+schema_version: 1
+kind: question_bank
+id: ats023-final
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: domain
+  id: final-domain-quiz
+  title: Troubleshooting
+questions:
+- id: ats023-final-010-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Add a toleration or correct a nodeSelector instead of removing
+    a taint.
+  source_readings:
+  - sections/section-010/module-02/course-02-taints-tolerations-and-placement-rules.md
+  prompt: A Deployment's Pods are `Pending`. The event says that one node did not
+    match the node selector and the other had an untolerated taint. An engineer fixes
+    the selector, but the Pods stay `Pending`. What is the most likely reason?
+  options:
+  - id: a
+    text: The taint rule also rejects the node, so the Pod still needs a toleration.
+      The event lists only the rules that rejected nodes in the last attempt.
+    explanation: Correct. Each rule rejects the node on its own. Fixing one rule exposes
+      the next, so read the event again after each repair.
+  - id: b
+    text: The scheduler caches the old result for one hour.
+    explanation: The scheduler retries `Pending` Pods and re-evaluates the new Pods
+      after a template change.
+  - id: c
+    text: A `nodeSelector` can never match a tainted node.
+    explanation: A selector and a toleration work together; a tainted node can match
+      both.
+  - id: d
+    text: The Deployment must be deleted and created again after any scheduling change.
+    explanation: A patch of the Pod template creates new Pods that the scheduler evaluates
+      again.
+  correct_option: a
+  explanation: Each rule rejects the node on its own. Fixing one rule exposes the
+    next, so read the event again after each repair.
+- id: ats023-final-010-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Recognise CrashLoopBackOff, OOMKilled and Evicted.
+  source_readings:
+  - sections/section-010/module-03/course-03-crashes-evictions-and-rollbacks.md
+  prompt: "`kubectl get pods` shows one Pod with the status `Evicted` and another
+    with `CrashLoopBackOff` whose last state is `OOMKilled`. Which statement is correct?"
+  options:
+  - id: a
+    text: Both Pods were killed by the same node memory pressure.
+    explanation: "`OOMKilled` is tied to a container limit and can happen on a healthy
+      node."
+  - id: b
+    text: Both Pods need a higher memory limit.
+    explanation: An evicted Pod is a node shortage and a higher limit does not repair
+      it.
+  - id: c
+    text: The evicted Pod was removed by the kubelet because the node ran short of
+      a resource, and the other Pod's container went over its own memory limit.
+    explanation: Correct. `Evicted` is a Pod-level result of node pressure. `OOMKilled`
+      is a container-level result of the container's memory limit.
+  - id: d
+    text: "`CrashLoopBackOff` is the cause of the restarts."
+    explanation: It only describes the waiting between restarts; the cause is in the
+      last state and the previous log.
+  correct_option: c
+  explanation: "`Evicted` is a Pod-level result of node pressure. `OOMKilled` is a
+    container-level result of the container's memory limit."
+- id: ats023-final-010-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Verify restored node responsibility without undoing intended
+    policy.
+  source_readings:
+  - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+  prompt: A worker has `Ready=Unknown`. The node controller added the `unreachable`
+    taints and the Pods of a Deployment still show `Running` four minutes later. Why
+    have the Pods not been replaced yet?
+  options:
+  - id: a
+    text: The scheduler needs ten minutes to notice a stopped kubelet.
+    explanation: The node controller, not the scheduler, reacts to stale status.
+  - id: b
+    text: Pods created by controllers have a default toleration of 300 seconds for
+      the `unreachable` taint, so the node controller waits before it evicts them.
+    explanation: 'Correct. The API server adds the toleration with `tolerationSeconds:
+      300` when it admits the Pod. Eviction starts only after that time.'
+  - id: c
+    text: The Pods were drained by an administrator and are waiting.
+    explanation: A drain evicts Pods at once and cordons the node; nothing here shows
+      a drain.
+  - id: d
+    text: Pods on an `Unknown` node are never replaced.
+    explanation: They are replaced after the toleration time ends.
+  correct_option: b
+  explanation: 'The API server adds the toleration with `tolerationSeconds: 300` when
+    it admits the Pod. Eviction starts only after that time.'
+- id: ats023-final-010-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Use rollout status and rollout undo to repair a failed rollout.
+  source_readings:
+  - sections/section-010/module-03/course-02-image-and-configuration-failures.md
+  prompt: A new Deployment has one revision. Its Pods show `ErrImagePull`. After you
+    correct the image, the new Pods show `CreateContainerConfigError`. A teammate
+    says the fix broke the Deployment. What is true?
+  options:
+  - id: a
+    text: The image fix caused the config error, so undo it.
+    explanation: The config error existed before; the kubelet reached it only after
+      the pull worked.
+  - id: b
+    text: "`kubectl rollout undo` repairs both faults."
+    explanation: With one revision there is no earlier template, and the reference
+      would still be wrong.
+  - id: c
+    text: Creating any ConfigMap with the same name as the image repairs it.
+    explanation: The image name has no link to the ConfigMap reference.
+  - id: d
+    text: The configuration check comes after the image pull, so there were two faults,
+      and the second was hidden behind the first. Fix the reference and keep the image
+      fix.
+    explanation: Correct. Because there is only one revision, undo has nothing to
+      return to, and an undo would not remove the missing ConfigMap reference.
+  correct_option: d
+  explanation: Because there is only one revision, undo has nothing to return to,
+    and an undo would not remove the missing ConfigMap reference.
+- id: ats023-final-020-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Combine Pod, event and Lease evidence to find the failed component
+  source_readings:
+  - sections/section-020/module-03/course-02-scheduler-static-pod-and-leader-election.md
+  prompt: A new Deployment `drifter-job` in `outpost` has a ReplicaSet and two Pods.
+    Both Pods are Pending with no events, and the Lease `kube-scheduler` has an old
+    `renewTime`. Which action is the best first step?
+  options:
+  - id: a
+    text: Increase the memory requests of the Pods.
+    explanation: A capacity problem would leave a FailedScheduling event.
+  - id: b
+    text: Read the scheduler Pod status and log, and the scheduler manifest on the
+      node.
+    explanation: Correct. The Pods exist, so the controller manager worked. No events
+      and a stale Lease point at the scheduler, so its status, log and manifest come
+      first.
+  - id: c
+    text: Restart the controller manager.
+    explanation: The Pods exist, so the controller manager did its job.
+  - id: d
+    text: Delete and recreate the Deployment.
+    explanation: The new Pods would wait in the same way.
+  correct_option: b
+  explanation: The Pods exist, so the controller manager worked. No events and a stale
+    Lease point at the scheduler, so its status, log and manifest come first.
+- id: ats023-final-020-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Find a broken API server flag from the error type
+  source_readings:
+  - sections/section-020/module-02/course-02-api-server-flags-and-error-types.md
+  prompt: "`kubectl` fails with `x509: certificate signed by unknown authority`. `curl
+    -k https://127.0.0.1:6443/livez` on the node answers `ok`. What does this show?"
+  options:
+  - id: a
+    text: The API server is not running.
+    explanation: The `curl` answer proves it runs and listens.
+  - id: b
+    text: etcd is unhealthy.
+    explanation: An etcd fault would show in the API server health checks, not as
+      an x509 error.
+  - id: c
+    text: The API server runs and the port is open, so the kubeconfig trust data does
+      not match the API server certificate authority.
+    explanation: Correct. The process answers when trust checks are skipped, so the
+      problem is the trust settings on the client.
+  - id: d
+    text: The caller lacks an RBAC rule.
+    explanation: A permission problem is reported as Forbidden after the TLS and authentication
+      steps pass.
+  correct_option: c
+  explanation: The process answers when trust checks are skipped, so the problem is
+    the trust settings on the client.
+- id: ats023-final-020-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Edit a static Pod manifest without side effects
+  source_readings:
+  - sections/section-020/module-02/course-01-static-pod-manifests-and-the-kubelet.md
+  prompt: You must change one flag in `kube-apiserver.yaml`. Which method is safest
+    for the kubelet and for later recovery?
+  options:
+  - id: a
+    text: Copy the file to `kube-apiserver.yaml.bak` in the manifest directory, then
+      edit the original in place.
+    explanation: The kubelet reads every file without a leading dot, so the backup
+      can define a second Pod with the same name.
+  - id: b
+    text: Copy the manifest to `/etc/kubernetes`, edit the copy and move it into the
+      manifest directory in one step.
+    explanation: Correct. The kubelet never reads a half-written file, and no stray
+      backup stays in the watched directory.
+  - id: c
+    text: Delete the manifest, wait, and write a new file.
+    explanation: The kubelet removes the component when the file disappears, and the
+      API goes down for the whole time.
+  - id: d
+    text: Edit the mirror Pod with `kubectl edit`.
+    explanation: The mirror Pod is read-only and the manifest stays the source of
+      truth.
+  correct_option: b
+  explanation: The kubelet never reads a half-written file, and no stray backup stays
+    in the watched directory.
+- id: ats023-final-020-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Check that kube-proxy works after a configuration change
+  source_readings:
+  - sections/section-020/module-03/course-03-kube-proxy-and-kube-system-add-ons.md
+  prompt: You edited the `config.conf` key of the ConfigMap `kube-proxy` to change
+    the proxy mode. Ten minutes later the running `kube-proxy` Pods behave as before.
+    Why, and what do you do?
+  options:
+  - id: a
+    text: The ConfigMap is cached for one hour; wait.
+    explanation: A Pod reads its configuration when it starts, and no timer applies.
+  - id: b
+    text: "`kube-proxy` reads its configuration at start, so restart the DaemonSet
+      with a rollout restart and then check the Pods."
+    explanation: Correct. Running Pods keep the configuration they started with. A
+      rollout restart starts new Pods that read the new ConfigMap.
+  - id: c
+    text: The edit was rejected by the scheduler.
+    explanation: The scheduler plays no part in ConfigMap changes.
+  - id: d
+    text: The mode can only be set with a flag on the API server.
+    explanation: The mode is part of the `kube-proxy` configuration.
+  correct_option: b
+  explanation: Running Pods keep the configuration they started with. A rollout restart
+    starts new Pods that read the new ConfigMap.
+- id: ats023-final-030-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Order the checks for a failing kubectl top
+  source_readings:
+  - sections/section-030/module-02/course-03-diagnosing-and-repairing-a-broken-metrics-server.md
+  prompt: "`kubectl top nodes` prints that the Metrics API is not available. The `probe`
+    Pods run fine. Which first check gives the most information with one command?"
+  options:
+  - id: a
+    text: Restart the `probe` Deployment.
+    explanation: The application is not the problem.
+  - id: b
+    text: "`kubectl get apiservice v1beta1.metrics.k8s.io` and read the `Available`
+      column."
+    explanation: Correct. It shows whether the API server can reach the backend and
+      with what reason.
+  - id: c
+    text: Raise the CPU request of `probe`.
+    explanation: The request does not affect the pipeline.
+  - id: d
+    text: Delete the node so it is re-registered.
+    explanation: This disrupts workloads and is not related to the cause.
+  correct_option: b
+  explanation: It shows whether the API server can reach the backend and with what
+    reason.
+- id: ats023-final-030-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why a node with low usage refuses Pods
+  source_readings:
+  - sections/section-030/module-03/course-02-diagnosing-oomkilled-and-node-capacity.md
+  prompt: "`kubectl top nodes` shows 20 percent memory use, but a new Pod stays `Pending`
+    with `Insufficient memory`. What explains it?"
+  options:
+  - id: a
+    text: The node has a memory leak.
+    explanation: Usage is low, so there is no leak on the node.
+  - id: b
+    text: The metrics values are wrong.
+    explanation: The scheduler does not use them.
+  - id: c
+    text: The sum of Pod requests is close to the allocatable memory, and the scheduler
+      counts requests.
+    explanation: Correct. `kubectl describe node` shows the allocated requests as
+      a share of allocatable.
+  - id: d
+    text: The Pod needs a GPU.
+    explanation: The event would name the missing resource.
+  correct_option: c
+  explanation: "`kubectl describe node` shows the allocated requests as a share of
+    allocatable."
+- id: ats023-final-030-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Predict a rollout failure under a quota
+  source_readings:
+  - sections/section-030/module-03/course-03-resourcequota-limitrange-and-admission.md
+  prompt: 'A Deployment of four replicas fits its namespace quota. A rolling update
+    with `maxSurge: 25%` then leaves one new Pod uncreated, with a `FailedCreate`
+    quota event. What happens?'
+  options:
+  - id: a
+    text: Old and new Pods count together during the update and push the total over
+      the quota.
+    explanation: Correct. Quota counts every non-finished Pod, including the old ones
+      still running.
+  - id: b
+    text: The quota ignores Pods that are terminating or updating.
+    explanation: Only finished Pods are ignored.
+  - id: c
+    text: The new Pod uses more memory than the old Pod.
+    explanation: The message names the quota total, not usage.
+  - id: d
+    text: The scheduler rejected the new Pod.
+    explanation: A quota failure happens at creation, before the scheduler.
+  correct_option: a
+  explanation: Quota counts every non-finished Pod, including the old ones still running.
+- id: ats023-final-030-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Decide the exit reason of a killed container
+  source_readings:
+  - sections/section-030/module-03/course-02-diagnosing-oomkilled-and-node-capacity.md
+  prompt: A container exited with code 137 and the reason `Error` after you deleted
+    its Pod. Which statement is correct?
+  options:
+  - id: a
+    text: It was OOM killed because 137 always means that.
+    explanation: The reason would be `OOMKilled` in that case.
+  - id: b
+    text: The kubelet sent SIGKILL when the container did not stop within the grace
+      period.
+    explanation: Correct. 137 is 128 plus signal 9, and the reason shows who sent
+      it.
+  - id: c
+    text: The scheduler evicted the Pod for memory pressure.
+    explanation: An eviction has the status `Evicted`.
+  - id: d
+    text: The memory limit was too high.
+    explanation: A high limit does not produce exit 137.
+  correct_option: b
+  explanation: 137 is 128 plus signal 9, and the reason shows who sent it.
+- id: ats023-final-040-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Read the log of the previous instance of a restarted container
+  source_readings:
+  - sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
+  prompt: The pod `scout` in `starfleet` shows `CrashLoopBackOff`. `kubectl logs scout`
+    prints only the start-up lines of the new instance. Which command shows why the
+    earlier instance stopped?
+  options:
+  - id: a
+    text: "`kubectl logs scout --previous`"
+    explanation: Correct. `--previous` reads the log of the last terminated instance
+      of the container.
+  - id: b
+    text: "`kubectl logs scout --since=1s`"
+    explanation: This limits the time window of the current instance only.
+  - id: c
+    text: "`kubectl logs scout --all-containers`"
+    explanation: This adds other containers but not the earlier instance.
+  - id: d
+    text: "`kubectl get events --previous`"
+    explanation: "`kubectl get events` has no `--previous` flag."
+  correct_option: a
+  explanation: "`--previous` reads the log of the last terminated instance of the
+    container."
+- id: ats023-final-040-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Select one container of a multi-container pod when reading logs
+  source_readings:
+  - sections/section-040/module-02/course-01-reading-logs-of-containers-init-containers-and-pod-sets.md
+  prompt: The pod `shuttle` has an init container `prepare` that exits with an error,
+    so the main container never starts. Which command reads the error?
+  options:
+  - id: a
+    text: "`kubectl logs shuttle` with no other flag."
+    explanation: For a pod with several containers, this chooses the default container
+      or asks for one, and it does not select the init container.
+  - id: b
+    text: "`kubectl logs shuttle -c prepare`"
+    explanation: Correct. `-c` names the container, and init containers are selected
+      the same way.
+  - id: c
+    text: "`kubectl exec shuttle -- cat /var/log/prepare`"
+    explanation: "`kubectl exec` needs a running container."
+  - id: d
+    text: "`kubectl describe node` and read the node events."
+    explanation: Node events do not hold the container output.
+  correct_option: b
+  explanation: "`-c` names the container, and init containers are selected the same
+    way."
+- id: ats023-final-040-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Debug a running pod that has no shell using an ephemeral container
+  source_readings:
+  - sections/section-040/module-02/course-03-debugging-with-exec-and-ephemeral-containers.md
+  prompt: The `probe` image has no shell, and `kubectl exec` with `sh` fails. You
+    must inspect the running pod without restarting it. Which approach works?
+  options:
+  - id: a
+    text: Delete the pod and create it again with a different image.
+    explanation: This restarts the workload and loses the state to inspect.
+  - id: b
+    text: Run `kubectl logs --previous` on the pod.
+    explanation: This shows old output and does not allow an interactive inspection.
+  - id: c
+    text: Edit the pod spec to add a container.
+    explanation: The list of regular containers of a running pod is immutable.
+  - id: d
+    text: "`kubectl debug -it probe --image=busybox:1.37.0 --target=probe`"
+    explanation: Correct. `kubectl debug` adds an ephemeral container with its own
+      image to the running pod and can share the process namespace of the target container.
+  correct_option: d
+  explanation: "`kubectl debug` adds an ephemeral container with its own image to
+    the running pod."
+- id: ats023-final-040-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Read control plane evidence on the node when the API server
+    is down
+  source_readings:
+  - sections/section-040/module-03/course-03-control-plane-component-logs.md
+  prompt: The API server does not answer, so `kubectl logs -n kube-system` fails.
+    You have a shell on the control-plane node. Which source reads the API server
+    container output?
+  options:
+  - id: a
+    text: The container runtime on the node, with `crictl ps -a` and `crictl logs`.
+    explanation: Correct. `crictl` talks to the runtime on the node and does not need
+      the API server.
+  - id: b
+    text: "`kubectl get events --all-namespaces`."
+    explanation: This command needs the API server.
+  - id: c
+    text: "`kubectl top pod -n kube-system`."
+    explanation: This command needs the API server and the Metrics API.
+  - id: d
+    text: The `kube-apiserver` Service logs.
+    explanation: The API server is a static pod, not a Service that has logs.
+  correct_option: a
+  explanation: "`crictl` talks to the runtime on the node and does not need the API
+    server."
+- id: ats023-final-050-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Trace one failing request to the first broken stage
+  source_readings:
+  - sections/section-050/module-01/course-01-tracing-a-service-request.md
+  - sections/section-050/module-03/course-01-endpointslices-target-ports-and-readiness.md
+  prompt: "`shuttle` in `starfleet` cannot reach `probe`. DNS resolves the name. The
+    EndpointSlice lists two ready endpoints on port 9090. The containers listen on
+    8080. A request fails at once with `Connection refused`. What do you change?"
+  options:
+  - id: a
+    text: The `targetPort` of the Service, to `http` or 8080.
+    explanation: Correct. Ready endpoints on the wrong port and a fast refusal point
+      to the `targetPort`. Name resolution, readiness and policy are not the cause
+      here.
+  - id: b
+    text: The readiness probe of the pods.
+    explanation: This is not the best answer. The pods are ready, so readiness is
+      not the fault.
+  - id: c
+    text: A NetworkPolicy that allows `shuttle`.
+    explanation: This is not the best answer. A policy drop gives silence and a timeout,
+      not a fast refusal.
+  - id: d
+    text: The `search` line in `/etc/resolv.conf`.
+    explanation: This is not the best answer. DNS resolved the name, so the resolver
+      is not the fault.
+  correct_option: a
+  explanation: Ready endpoints on the wrong port and a fast refusal point to the `targetPort`.
+    Name resolution, readiness and policy are not the cause here.
+- id: ats023-final-050-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Separate a DNS fault from a connection fault
+  source_readings:
+  - sections/section-050/module-02/course-02-search-domains-ndots-and-lookups.md
+  - sections/section-050/module-02/course-03-coredns-logs-and-repairing-the-corefile.md
+  prompt: Every lookup from every pod times out, in all namespaces. The `kube-dns`
+    Service exists. Which check comes first?
+  options:
+  - id: a
+    text: The `targetPort` of the application Services.
+    explanation: This is not the best answer. Application Services are not involved
+      in name resolution.
+  - id: b
+    text: The EndpointSlice of `kube-dns` and the `coredns` Deployment in `kube-system`.
+    explanation: Correct. A timeout in every namespace points to the server side.
+      An empty `kube-dns` slice, from a Deployment with no ready replicas, explains
+      all lookups failing at once.
+  - id: c
+    text: The readiness probe of the application.
+    explanation: This is not the best answer. Application readiness does not affect
+      DNS.
+  - id: d
+    text: The Ingress class of the controller.
+    explanation: This is not the best answer. An Ingress class affects external routes,
+      not in-cluster lookups.
+  correct_option: b
+  explanation: A timeout in every namespace points to the server side. An empty `kube-dns`
+    slice, from a Deployment with no ready replicas, explains all lookups failing
+    at once.
+- id: ats023-final-050-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Choose the narrowest NetworkPolicy repair
+  source_readings:
+  - sections/section-050/module-03/course-03-networkpolicy-default-deny-and-allow-rules.md
+  prompt: After a default-deny ingress policy, `drifter` in `outpost` must keep reaching
+    `probe` in `starfleet` on port 8080, and no other namespace may. Which repair
+    is correct?
+  options:
+  - id: a
+    text: Delete the default deny.
+    explanation: This is not the best answer. Deleting the deny removes the isolation
+      for every client.
+  - id: b
+    text: An allow rule with an empty `from`.
+    explanation: This is not the best answer. An empty `from` allows every source.
+  - id: c
+    text: 'An allow rule on the `probe` pods with a `from` entry that has a `namespaceSelector`
+      for the label `kubernetes.io/metadata.name: outpost` and a `podSelector` for
+      `app: drifter`, on TCP 8080.'
+    explanation: Correct. A `from` entry with both selectors matches the `drifter`
+      pods in `outpost` only. The port is the pod port 8080, and the default deny
+      stays in place.
+  - id: d
+    text: An allow rule on port 80 from every namespace.
+    explanation: This is not the best answer. Port 80 is the Service port, and every
+      namespace is too wide.
+  correct_option: c
+  explanation: A `from` entry with both selectors matches the `drifter` pods in `outpost`
+    only. The port is the pod port 8080, and the default deny stays in place.
+- id: ats023-final-050-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Find the first failing relationship with port-forward and a
+    debug pod
+  source_readings:
+  - sections/section-050/module-03/course-02-testing-services-port-forward-debug-pods-and-nodeport.md
+  prompt: A `port-forward` to a `probe` pod works. A debug pod in `starfleet` with
+    the label `app=shuttle` reaches `http://probe/`. A debug pod without that label
+    times out. What is the cause?
+  options:
+  - id: a
+    text: The Service selector is wrong.
+    explanation: This is not the best answer. A wrong selector would fail for both
+      debug pods.
+  - id: b
+    text: The readiness probe fails.
+    explanation: This is not the best answer. Readiness would fail for both pods.
+  - id: c
+    text: CoreDNS is down.
+    explanation: This is not the best answer. DNS is the same for both pods.
+  - id: d
+    text: A NetworkPolicy allows only pods with the label `app=shuttle`.
+    explanation: Correct. The two debug pods use the same Service and the same DNS,
+      so only the labels differ. A policy that allows the label `app=shuttle` explains
+      the difference.
+  correct_option: d
+  explanation: The two debug pods use the same Service and the same DNS, so only the
+    labels differ. A policy that allows the label `app=shuttle` explains the difference.

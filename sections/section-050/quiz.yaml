@@ -1,0 +1,373 @@
+# Knowledge check for section 050. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats023-050
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-050
+  title: "Troubleshoot services and networking"
+questions:
+  - id: ats023-050-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Say which stage of a request a successful DNS lookup proves"
+    source_readings:
+      - sections/section-050/module-01/course-01-tracing-a-service-request.md
+    prompt: |-
+      From the `shuttle` pod, `nslookup probe.starfleet.svc.cluster.local` returns the Service cluster IP, but `wget http://probe/` times out. What does the lookup prove?
+    options:
+      - id: a
+        text: "That the name resolves, and nothing about endpoints, forwarding or the application."
+        explanation: "Correct. A lookup only tests name resolution by CoreDNS. The endpoints, the forwarding and the listener are later stages that still have to be checked."
+      - id: b
+        text: "That the Service has ready endpoints."
+        explanation: "This is not the best answer. The lookup does not read the EndpointSlices. A Service address exists even when no pod is ready."
+      - id: c
+        text: "That the application listens on the Service port."
+        explanation: "This is not the best answer. The lookup does not contact the application. It never opens a connection to the pod."
+      - id: d
+        text: "That no NetworkPolicy blocks the connection."
+        explanation: "This is not the best answer. The lookup is a DNS query. A NetworkPolicy filters connections, not name resolution on its own."
+    correct_option: a
+    explanation: "A lookup only tests name resolution by CoreDNS. The endpoints, the forwarding and the listener are later stages that still have to be checked."
+
+  - id: ats023-050-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Tell a selector fault from a readiness fault and a port fault"
+    source_readings:
+      - sections/section-050/module-01/course-01-tracing-a-service-request.md
+    prompt: |-
+      The `probe` pods are `Running` with `1/1` ready. `kubectl get endpointslices -l kubernetes.io/service-name=probe` shows no endpoints. Which relationship is broken?
+    options:
+      - id: a
+        text: "The Service `targetPort` does not match the container port."
+        explanation: "This is not the best answer. A wrong `targetPort` leaves endpoints in the slice, on the wrong port. This slice is empty."
+      - id: b
+        text: "The Service selector matches none of the pod labels."
+        explanation: "Correct. Ready pods that do not appear in any slice mean the controller did not select them. The selector is the only input that decides selection."
+      - id: c
+        text: "The readiness probe of the pods fails."
+        explanation: "This is not the best answer. A failing readiness probe leaves the pods in the slice but not ready, and the pods would show `0/1`."
+      - id: d
+        text: "CoreDNS is scaled down."
+        explanation: "This is not the best answer. CoreDNS does not build EndpointSlices. The EndpointSlice controller does."
+    correct_option: b
+    explanation: "Ready pods that do not appear in any slice mean the controller did not select them. The selector is the only input that decides selection."
+
+  - id: ats023-050-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Say which component produced an HTTP response in an external request"
+    source_readings:
+      - sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+    prompt: |-
+      A request to `http://probe.local/` through the Traefik Ingress returns `404 Not Found`. The application log shows no request. What is the most likely cause?
+    options:
+      - id: a
+        text: "The `probe` pods are not ready."
+        explanation: "This is not the best answer. Unready pods lead to no endpoints, and a controller usually answers 502 or 503 for a matched rule with no backend."
+      - id: b
+        text: "The Service `targetPort` is wrong."
+        explanation: "This is not the best answer. A wrong target port makes the connection to the pod fail, which gives a gateway error and not a 404."
+      - id: c
+        text: "No Ingress rule matched the host and path, so the controller answered itself."
+        explanation: "Correct. A controller answers 404 when no rule matches. The application never saw the request, which matches an empty application log. A bad backend or an unready pod would produce a gateway error from the controller instead."
+      - id: d
+        text: "CoreDNS cannot resolve `probe.local`."
+        explanation: "This is not the best answer. The client reached the controller, so the host name resolved. A resolution failure would stop the request before it connects."
+    correct_option: c
+    explanation: "A controller answers 404 when no rule matches. The application never saw the request, which matches an empty application log. A bad backend or an unready pod would produce a gateway error from the controller instead."
+
+  - id: ats023-050-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read an Ingress and find a broken backend reference"
+    source_readings:
+      - sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
+      - sections/section-050/module-01/course-03-guided-practice.md
+    prompt: |-
+      An Ingress for host `probe.local` names the backend Service `missing-service` on port 80. The API server accepted it. What does `kubectl describe ingress` show, and what is the repair?
+    options:
+      - id: a
+        text: "The object is invalid. Delete it and create it again with `kubectl replace`."
+        explanation: "This is not the best answer. The object is valid. Acceptance and a working route are different things."
+      - id: b
+        text: "The backend is correct. Add a second rule with the host `missing-service`."
+        explanation: "This is not the best answer. A new host rule would not repair the backend reference and would change the route contract."
+      - id: c
+        text: "No error appears, because the API server checked the Service. Restart the controller."
+        explanation: "This is not the best answer. The API server does not check that the Service exists, so an unknown backend produces no rejection and the controller is not the problem."
+      - id: d
+        text: "An error beside the backend that the Service is not found. Change the backend to the existing `probe` Service on port 80."
+        explanation: "Correct. The API server accepts any valid Ingress and does not check backend Services. The describe output reports that the Service does not exist, and the repair names the real Service."
+    correct_option: d
+    explanation: "The API server accepts any valid Ingress and does not check backend Services. The describe output reports that the Service does not exist, and the repair names the real Service."
+
+  - id: ats023-050-q05
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Name the objects of cluster DNS"
+    source_readings:
+      - sections/section-050/module-02/course-01-coredns-and-the-cluster-dns-service.md
+    prompt: |-
+      A pod's `/etc/resolv.conf` has a `nameserver` line. Which object holds that address, and what does the address point to?
+    options:
+      - id: a
+        text: "The `coredns` pod IP, written by the Deployment."
+        explanation: "This is not the best answer. Pod IPs change when pods restart. Pods use the stable Service address."
+      - id: b
+        text: "The `kube-dns` Service cluster IP, written into the pod by the kubelet."
+        explanation: "Correct. The kubelet writes the cluster IP of the `kube-dns` Service into the pods that use `dnsPolicy: ClusterFirst`. The Service forwards to the CoreDNS pods."
+      - id: c
+        text: "The node IP, copied from the host."
+        explanation: "This is not the best answer. The node address is used only with `dnsPolicy: Default`, and that policy cannot resolve Service names."
+      - id: d
+        text: "The Corefile, which lists the nameserver."
+        explanation: "This is not the best answer. The Corefile configures the server, and it does not hold the address that clients use."
+    correct_option: b
+    explanation: "The kubelet writes the cluster IP of the `kube-dns` Service into the pods that use `dnsPolicy: ClusterFirst`. The Service forwards to the CoreDNS pods."
+
+  - id: ats023-050-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain search domains and ndots"
+    source_readings:
+      - sections/section-050/module-02/course-02-search-domains-ndots-and-lookups.md
+    prompt: |-
+      A pod in `outpost` runs `wget http://probe/` and gets a bad address error. The Service `probe` exists in `starfleet`. What fixes the request without changing any object?
+    options:
+      - id: a
+        text: "Set `ndots:0` in the pod."
+        explanation: "This is not the best answer. A lower `ndots` changes the order of attempts and does not add the `starfleet` namespace to the name."
+      - id: b
+        text: "Restart CoreDNS."
+        explanation: "This is not the best answer. CoreDNS is healthy, since it answered with an error. A restart changes nothing."
+      - id: c
+        text: "Use the name `probe.starfleet`."
+        explanation: "Correct. The short name `probe` expands with the search suffixes of `outpost`, so it never reaches a Service in `starfleet`. `probe.starfleet` expands to `probe.starfleet.svc.cluster.local`."
+      - id: d
+        text: "Use the node IP."
+        explanation: "This is not the best answer. Using a node IP bypasses the Service and does not fix the name."
+    correct_option: c
+    explanation: "The short name `probe` expands with the search suffixes of `outpost`, so it never reaches a Service in `starfleet`. `probe.starfleet` expands to `probe.starfleet.svc.cluster.local`."
+
+  - id: ats023-050-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Tell a name error from a server failure"
+    source_readings:
+      - sections/section-050/module-02/course-02-search-domains-ndots-and-lookups.md
+    prompt: |-
+      From a pod, one lookup returns `NXDOMAIN` at once, and another waits and then reports that no servers could be reached. What do the two results mean?
+    options:
+      - id: a
+        text: "Both mean CoreDNS is down."
+        explanation: "This is not the best answer. A server that returns `NXDOMAIN` is up."
+      - id: b
+        text: "Both mean the Service has no endpoints."
+        explanation: "This is not the best answer. DNS answers do not depend on the endpoints of the application Service."
+      - id: c
+        text: "The first means a NetworkPolicy blocks DNS. The second means a typo."
+        explanation: "This is not the best answer. A policy that blocks DNS gives a timeout, and a typo gives a name error. The two are the other way round."
+      - id: d
+        text: "The first is an answer that the name does not exist. The second is no answer, so the server or the path to it is broken."
+        explanation: "Correct. A name error is an answer from a live server. A timeout means the query got no reply, which points to no ready CoreDNS pod, a policy blocking port 53 or a wrong nameserver line."
+    correct_option: d
+    explanation: "A name error is an answer from a live server. A timeout means the query got no reply, which points to no ready CoreDNS pod, a policy blocking port 53 or a wrong nameserver line."
+
+  - id: ats023-050-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read CoreDNS logs and enable the log plugin"
+    source_readings:
+      - sections/section-050/module-02/course-03-coredns-logs-and-repairing-the-corefile.md
+    prompt: |-
+      You add the `log` plugin to the Corefile and run lookups from a pod, but the CoreDNS logs show none of your queries. What does this tell you?
+    options:
+      - id: a
+        text: "The queries probably never reached the CoreDNS pods, so look at the pod's `resolv.conf`, the `kube-dns` Service and the network."
+        explanation: "Correct. With `log` active, every query that reaches CoreDNS appears in the log. A missing query points to the path between the client and the server. Also confirm that the ConfigMap reload has happened."
+      - id: b
+        text: "CoreDNS dropped the queries because the cache is full."
+        explanation: "This is not the best answer. A full cache would still log the queries that arrive."
+      - id: c
+        text: "The `log` plugin only writes errors."
+        explanation: "This is not the best answer. The `errors` plugin writes errors. The `log` plugin writes one line per query."
+      - id: d
+        text: "The queries were answered by the application."
+        explanation: "This is not the best answer. The application does not answer DNS queries."
+    correct_option: a
+    explanation: "With `log` active, every query that reaches CoreDNS appears in the log. A missing query points to the path between the client and the server. Also confirm that the ConfigMap reload has happened."
+
+  - id: ats023-050-q09
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Repair a Corefile with the wrong zone"
+    source_readings:
+      - sections/section-050/module-02/course-03-coredns-logs-and-repairing-the-corefile.md
+    prompt: |-
+      CoreDNS pods are ready, and the `kube-dns` EndpointSlice has two endpoints. A lookup of `probe.starfleet.svc.cluster.local` returns `NXDOMAIN`, and the log shows the query. The `kubernetes` line reads `kubernetes cluster.locall in-addr.arpa ip6.arpa`. What is the repair?
+    options:
+      - id: a
+        text: "Scale CoreDNS to four replicas."
+        explanation: "This is not the best answer. More replicas run the same faulty Corefile."
+      - id: b
+        text: "Change the `forward` line to a public resolver."
+        explanation: "This is not the best answer. A public resolver does not know cluster names either, and it removes the node resolvers."
+      - id: c
+        text: "Correct the zone to `cluster.local` in the Corefile ConfigMap, and keep the other plugins."
+        explanation: "Correct. The `kubernetes` plugin answers only the zones on its line. A wrong zone sends cluster names to `forward`, which does not know them. The repair is the zone name in the ConfigMap."
+      - id: d
+        text: "Add `dnsConfig` with the right search domain to every workload."
+        explanation: "This is not the best answer. A per-workload change hides the fault for some pods and leaves cluster DNS broken for all others."
+    correct_option: c
+    explanation: "The `kubernetes` plugin answers only the zones on its line. A wrong zone sends cluster names to `forward`, which does not know them. The repair is the zone name in the ConfigMap."
+
+  - id: ats023-050-q10
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Compare port, targetPort and containerPort"
+    source_readings:
+      - sections/section-050/module-03/course-01-endpointslices-target-ports-and-readiness.md
+    prompt: |-
+      A Service has `port: 80` and `targetPort: 9090`. The container listens on 8080 and the pods are ready. What does a client see?
+    options:
+      - id: a
+        text: "A normal answer, because `containerPort` is 8080."
+        explanation: "This is not the best answer. The Service uses `targetPort`, not `containerPort`, to choose the destination port."
+      - id: b
+        text: "A timeout, because the Service has no endpoints."
+        explanation: "This is not the best answer. The pods are ready, so the slice has endpoints. Only the port is wrong."
+      - id: c
+        text: "A DNS name error."
+        explanation: "This is not the best answer. Name resolution is not involved. The Service name resolves."
+      - id: d
+        text: "A fast connection refusal, because the connection reaches the pod on a port with no listener."
+        explanation: "Correct. The slice lists the ready pods on port 9090, so the connection reaches a pod and the kernel rejects it. A declared `containerPort` does not decide where the Service forwards."
+    correct_option: d
+    explanation: "The slice lists the ready pods on port 9090, so the connection reaches a pod and the kernel rejects it. A declared `containerPort` does not decide where the Service forwards."
+
+  - id: ats023-050-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Show that a failing readiness probe removes a pod from the endpoints"
+    source_readings:
+      - sections/section-050/module-03/course-01-endpointslices-target-ports-and-readiness.md
+    prompt: |-
+      One of two `probe` pods starts failing its readiness probe. What happens to Service traffic and to the container?
+    options:
+      - id: a
+        text: "The endpoint of the pod turns not ready and receives no Service traffic, and the container keeps running."
+        explanation: "Correct. Readiness controls the `ready` condition of the endpoint. A liveness probe, not a readiness probe, makes the kubelet restart a container."
+      - id: b
+        text: "The pod is restarted by the kubelet and stays in the slice."
+        explanation: "This is not the best answer. Restarts come from liveness probes."
+      - id: c
+        text: "The Service is deleted."
+        explanation: "This is not the best answer. A readiness failure does not remove the Service object."
+      - id: d
+        text: "Both pods are removed from the slice."
+        explanation: "This is not the best answer. Each pod has its own readiness. The other pod stays ready."
+    correct_option: a
+    explanation: "Readiness controls the `ready` condition of the endpoint. A liveness probe, not a readiness probe, makes the kubelet restart a container."
+
+  - id: ats023-050-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use port-forward and a debug pod to cut the path"
+    source_readings:
+      - sections/section-050/module-03/course-02-testing-services-port-forward-debug-pods-and-nodeport.md
+    prompt: |-
+      `kubectl port-forward deployment/probe 8081:8080` and `curl` work, but `wget http://probe/` from `shuttle` fails. What do you conclude?
+    options:
+      - id: a
+        text: "The application is broken."
+        explanation: "This is not the best answer. The forward reached the application and it answered."
+      - id: b
+        text: "The pod answers, so the fault lies between the client and the pod: the Service, its endpoints, `kube-proxy` or a policy."
+        explanation: "Correct. A port-forward skips the Service and the endpoint selection. A working forward proves the pod and its port, so the next layer to check is the Service path."
+      - id: c
+        text: "CoreDNS is broken."
+        explanation: "This is not the best answer. A DNS fault would not be hidden by a forward, but the fault could also lie after name resolution. The evidence only narrows it to the path in between."
+      - id: d
+        text: "The port-forward proves the Service is healthy."
+        explanation: "This is not the best answer. The forward does not use the Service at all."
+    correct_option: b
+    explanation: "A port-forward skips the Service and the endpoint selection. A working forward proves the pod and its port, so the next layer to check is the Service path."
+
+  - id: ats023-050-q13
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain NodePort and kube-proxy"
+    source_readings:
+      - sections/section-050/module-03/course-02-testing-services-port-forward-debug-pods-and-nodeport.md
+    prompt: |-
+      A Service of type NodePort works from a pod through the cluster IP but not through a node IP and node port. Which component programs the rules for both?
+    options:
+      - id: a
+        text: "CoreDNS."
+        explanation: "This is not the best answer. CoreDNS answers names and does not forward connections."
+      - id: b
+        text: "The EndpointSlice controller."
+        explanation: "This is not the best answer. The EndpointSlice controller builds the lists and does not program node rules."
+      - id: c
+        text: "The kubelet of the client pod."
+        explanation: "This is not the best answer. The kubelet starts pods and does not program Service forwarding."
+      - id: d
+        text: "`kube-proxy`, which runs on every node."
+        explanation: "Correct. `kube-proxy` watches Services and EndpointSlices and programs the packet rules for the cluster IP and the node port on each node."
+    correct_option: d
+    explanation: "`kube-proxy` watches Services and EndpointSlices and programs the packet rules for the cluster IP and the node port on each node."
+
+  - id: ats023-050-q14
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Write a default deny and an allow rule that uses the pod port"
+    source_readings:
+      - sections/section-050/module-03/course-03-networkpolicy-default-deny-and-allow-rules.md
+    prompt: |-
+      A default-deny ingress policy exists in `starfleet`. The `probe` Service uses port 80 and `targetPort: http` (container port 8080). Which allow rule lets only the `shuttle` pods in `starfleet` reach the `probe` pods?
+    options:
+      - id: a
+        text: "Ingress to `app=probe` from pods with `app=shuttle`, TCP port 8080."
+        explanation: "Correct. A policy sees the packet after the Service has translated the port, so the rule uses the pod port 8080. The `from` pod selector limits the source to the `shuttle` pods in the same namespace."
+      - id: b
+        text: "Ingress to `app=probe` from pods with `app=shuttle`, TCP port 80."
+        explanation: "This is not the best answer. Port 80 is the Service port. The packet that reaches the pod uses 8080, so the rule matches nothing."
+      - id: c
+        text: "Ingress to every pod from `0.0.0.0/0`, TCP port 8080."
+        explanation: "This is not the best answer. This allows every source and removes the isolation that the policy gave."
+      - id: d
+        text: "Delete the default deny."
+        explanation: "This is not the best answer. Deleting the policy removes all isolation and is not an allow rule."
+    correct_option: a
+    explanation: "A policy sees the packet after the Service has translated the port, so the rule uses the pod port 8080. The `from` pod selector limits the source to the `shuttle` pods in the same namespace."
+
+  - id: ats023-050-q15
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "State the condition for NetworkPolicy enforcement"
+    source_readings:
+      - sections/section-050/module-03/course-03-networkpolicy-default-deny-and-allow-rules.md
+    prompt: |-
+      You apply a default-deny ingress policy, and a request that worked before still works. What is the most likely explanation?
+    options:
+      - id: a
+        text: "The API server cannot store NetworkPolicy objects."
+        explanation: "This is not the best answer. The object was stored. Storing and enforcing are different."
+      - id: b
+        text: "The network plugin on the nodes does not enforce NetworkPolicy, so the object has no effect."
+        explanation: "Correct. The API server stores the object, and the network plugin enforces it. Without enforcement the object has no effect, so every other policy test in that cluster proves nothing."
+      - id: c
+        text: "Policies apply only after a restart of the pods."
+        explanation: "This is not the best answer. Policies apply to running pods without a restart when the plugin enforces them."
+      - id: d
+        text: "Policies affect only requests from other namespaces."
+        explanation: "This is not the best answer. A default deny with `podSelector: {}` isolates pods against all sources, in all namespaces."
+    correct_option: b
+    explanation: "The API server stores the object, and the network plugin enforces it. Without enforcement the object has no effect, so every other policy test in that cluster proves nothing."

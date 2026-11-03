@@ -1,0 +1,348 @@
+# Knowledge check for section 010. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats023-010
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-010
+  title: "Troubleshoot clusters and nodes"
+questions:
+  - id: ats023-010-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Distinguish unready, unschedulable and stale reporting."
+    source_readings:
+      - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+    prompt: |-
+      The worker `outpost-node-2` shows `Ready,SchedulingDisabled` in `kubectl get nodes`. Its Pods keep running and answer requests. What does this status mean?
+    options:
+      - id: a
+        text: "The kubelet stopped posting status, so the node controller marked the node unschedulable."
+        explanation: "A stopped kubelet gives `NotReady` with the condition `Unknown`, not `Ready`."
+      - id: b
+        text: "An administrator cordoned the node. It is healthy and the scheduler skips it for new Pods until someone runs `kubectl uncordon`."
+        explanation: "Correct. `SchedulingDisabled` is the cordon state (`spec.unschedulable: true`). The kubelet still reports `Ready`, so the node is healthy and only new placements are blocked."
+      - id: c
+        text: "The node ran out of memory and the kubelet evicted all Pods."
+        explanation: "Memory pressure shows as the `MemoryPressure` condition, and the Pods here still run."
+      - id: d
+        text: "The container runtime failed, so the node is broken and must be replaced."
+        explanation: "A failed runtime does not set `SchedulingDisabled`, and the node reports `Ready`."
+    correct_option: b
+    explanation: "`SchedulingDisabled` is the cordon state (`spec.unschedulable: true`). The kubelet still reports `Ready`, so the node is healthy and only new placements are blocked."
+
+  - id: ats023-010-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Trace kubelet and runtime dependencies."
+    source_readings:
+      - sections/section-010/module-01/course-01-diagnosing-node-readiness-and-host-dependencies.md
+    prompt: |-
+      A worker shows `NotReady`. `kubectl describe node` shows `Ready=Unknown` with the message that the kubelet stopped posting node status, and the `unreachable` taints. What is the best next step?
+    options:
+      - id: a
+        text: "Add a toleration for the `unreachable` taint to every Deployment."
+        explanation: "A toleration hides the symptom and does not restart the reporting."
+      - id: b
+        text: "Delete the Node object and let it register again."
+        explanation: "This removes evidence and does not explain why the kubelet stopped."
+      - id: c
+        text: "Check the kubelet service on the node itself, for example with `systemctl status kubelet` and `journalctl -u kubelet`, because the reporting path stopped."
+        explanation: "Correct. `Unknown` means the node controller received no report. The evidence for why the kubelet is silent is on the node: its service state and its log."
+      - id: d
+        text: "Turn off certificate verification in the kubelet so that it can reach the API server."
+        explanation: "Nothing shows a trust failure, and turning off verification would be unsafe."
+    correct_option: c
+    explanation: "`Unknown` means the node controller received no report. The evidence for why the kubelet is silent is on the node: its service state and its log."
+
+  - id: ats023-010-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Interpret pressure, trust and connectivity evidence."
+    source_readings:
+      - sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
+    prompt: |-
+      Three unrelated applications in different namespaces fail at the same time, and `kubectl get pods -A -o wide` shows that all three run on `worker-2`. The applications on `worker-1` work. Which investigation fits best?
+    options:
+      - id: a
+        text: "Restart every Deployment in the cluster to clear the fault."
+        explanation: "Broad restarts add disruption and destroy evidence."
+      - id: b
+        text: "Open each application's code and look for a common bug."
+        explanation: "The pattern points at the node, not at three identical bugs."
+      - id: c
+        text: "Check the storage backend that all nodes share."
+        explanation: "Applications on `worker-1` use the same backend and work, so it is not the common factor."
+      - id: d
+        text: "Inspect `worker-2`: its conditions, its kubelet and runtime, its resource pressure and its network path."
+        explanation: "Correct. The failures share a node and cross namespaces, so a shared node dependency is the strongest hypothesis. Node evidence is cheap to read and covers all three."
+    correct_option: d
+    explanation: "The failures share a node and cross namespaces, so a shared node dependency is the strongest hypothesis. Node evidence is cheap to read and covers all three."
+
+  - id: ats023-010-q04
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Interpret pressure, trust and connectivity evidence."
+    source_readings:
+      - sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
+    prompt: |-
+      A Pod restarts repeatedly. Its last state shows `OOMKilled` with exit code 137. The node reports `MemoryPressure=False` and other Pods on the node are fine. What is the cause?
+    options:
+      - id: a
+        text: "The container went over its own memory limit, so the kernel ended it. The limit or the application's memory use must change."
+        explanation: "Correct. `OOMKilled` is tied to the container boundary. Node-wide pressure would show `MemoryPressure=True` and could evict Pods that never exceeded a limit."
+      - id: b
+        text: "The kubelet evicted the Pod because the node is short of memory."
+        explanation: "Eviction sets the reason `Evicted` on the Pod and needs node pressure, which is `False` here."
+      - id: c
+        text: "The node is not ready and the node controller deleted the container."
+        explanation: "The node is healthy, and the controller deletes Pods, not single containers."
+      - id: d
+        text: "The scheduler placed the Pod on a node without enough allocatable memory."
+        explanation: "The Pod is running and was scheduled; the failure happens after it starts."
+    correct_option: a
+    explanation: "`OOMKilled` is tied to the container boundary. Node-wide pressure would show `MemoryPressure=True` and could evict Pods that never exceeded a limit."
+
+  - id: ats023-010-q05
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Read a FailedScheduling event and name the rule that rejected each node."
+    source_readings:
+      - sections/section-010/module-02/course-01-how-the-scheduler-decides.md
+    prompt: |-
+      A Deployment's Pod stays `Pending` with no node. The event says `0/2 nodes are available` and that one node has `Insufficient cpu` while the other has an untolerated taint. The container requests 64 CPUs. What is the right repair for the CPU rule?
+    options:
+      - id: a
+        text: "Raise the CPU limit of the container."
+        explanation: "The scheduler ignores limits when it filters nodes."
+      - id: b
+        text: "Lower the container's CPU request to what it needs, because the scheduler compares requests with the allocatable CPU of each node."
+        explanation: "Correct. The scheduler uses requests, not usage and not limits. A request larger than every node's allocatable CPU can never fit."
+      - id: c
+        text: "Remove the CPU request so that the scheduler treats the Pod as free."
+        explanation: "This changes the sizing intent and can overload the node; the request should match the need."
+      - id: d
+        text: "Delete the Pod so that the scheduler tries again."
+        explanation: "The replacement has the same request and fails the same way."
+    correct_option: b
+    explanation: "The scheduler uses requests, not usage and not limits. A request larger than every node's allocatable CPU can never fit."
+
+  - id: ats023-010-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Compare a Pod's requests and selectors with a node's capacity and labels."
+    source_readings:
+      - sections/section-010/module-02/course-01-how-the-scheduler-decides.md
+    prompt: |-
+      The worker has the label `pool=survey`. The `probe` Deployment has `nodeSelector: {pool: survey-east}` and its Pod is `Pending`. The `FailedScheduling` event says the node did not match the Pod's node selector. What is the correct repair?
+    options:
+      - id: a
+        text: "Remove the `nodeSelector` from the Deployment."
+        explanation: "This starts the Pod but drops the rule that says where the workload must run."
+      - id: b
+        text: "Add a toleration for `pool=survey-east`."
+        explanation: "Tolerations answer taints, not label selectors."
+      - id: c
+        text: "Correct the selector in the Deployment to `pool: survey`, so that it matches the real label."
+        explanation: "Correct. The label on the node is the fact and the selector contains the typo. Keeping a selector keeps the placement intent."
+      - id: d
+        text: "Cordon the worker so that the scheduler reconsiders it."
+        explanation: "A cordon makes the node less eligible, not more."
+    correct_option: c
+    explanation: "The label on the node is the fact and the selector contains the typo. Keeping a selector keeps the placement intent."
+
+  - id: ats023-010-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Add a toleration or correct a nodeSelector instead of removing a taint."
+    source_readings:
+      - sections/section-010/module-02/course-02-taints-tolerations-and-placement-rules.md
+    prompt: |-
+      The worker has the taint `dedicated=survey:NoSchedule`, and the survey team owns the `scout` Deployment. After a rollout restart, the new `scout` Pod is `Pending`. Which change fixes it and keeps the reservation?
+    options:
+      - id: a
+        text: "Add a toleration with key `dedicated`, operator `Equal`, value `survey` and effect `NoSchedule` to the Pod template."
+        explanation: "Correct. A toleration gives the Pod permission to use the tainted node. The taint stays, so other workloads are still kept off the node."
+      - id: b
+        text: "Remove the taint with `kubectl taint nodes ... dedicated=survey:NoSchedule-`."
+        explanation: "This opens the node to every workload and undoes the reservation."
+      - id: c
+        text: "Add a `nodeSelector` for `dedicated: survey`."
+        explanation: "A selector attracts Pods to labels but does not give permission to use a taint."
+      - id: d
+        text: "Scale the Deployment to zero and back to two."
+        explanation: "The new Pods are rejected by the same taint."
+    correct_option: a
+    explanation: "A toleration gives the Pod permission to use the tainted node. The taint stays, so other workloads are still kept off the node."
+
+  - id: ats023-010-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain the effects of NoSchedule and NoExecute taints."
+    source_readings:
+      - sections/section-010/module-02/course-02-taints-tolerations-and-placement-rules.md
+    prompt: |-
+      An administrator adds the taint `maintenance=true:NoExecute` to a worker that runs Pods without a matching toleration. What happens to those running Pods?
+    options:
+      - id: a
+        text: "They keep running, and only new Pods are blocked."
+        explanation: "That describes `NoSchedule`, not `NoExecute`."
+      - id: b
+        text: "They keep running, because a taint never touches running Pods."
+        explanation: "Only `NoSchedule` and `PreferNoSchedule` leave running Pods alone."
+      - id: c
+        text: "They move to the control plane node automatically."
+        explanation: "Replacements go only to eligible nodes, and the control plane node has its own `NoSchedule` taint."
+      - id: d
+        text: "The node controller evicts them, because `NoExecute` also affects Pods that already run and do not tolerate the taint."
+        explanation: "Correct. `NoExecute` blocks new Pods and evicts running Pods that lack a toleration, after `tolerationSeconds` if the Pod sets one."
+    correct_option: d
+    explanation: "`NoExecute` blocks new Pods and evicts running Pods that lack a toleration, after `tolerationSeconds` if the Pod sets one."
+
+  - id: ats023-010-q09
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why a PodDisruptionBudget can stop a drain."
+    source_readings:
+      - sections/section-010/module-02/course-03-cordon-drain-and-disruption-budgets.md
+    prompt: |-
+      `kubectl drain worker-1 --ignore-daemonsets` waits and prints that it cannot evict a `bridge` Pod because it would violate the disruption budget. `bridge` has two replicas and a PodDisruptionBudget with `minAvailable: 2`. What is the correct way forward?
+    options:
+      - id: a
+        text: "Delete the `bridge` Pods with `kubectl delete pod` to bypass the budget."
+        explanation: "A direct delete skips the budget but removes the protection the team asked for."
+      - id: b
+        text: "Raise the replica count or change the budget with the workload owner's agreement, so that at least one disruption is allowed, then drain again."
+        explanation: "Correct. The budget allows zero disruptions, so the API server refuses the eviction. The honest repairs change capacity or the budget, not the protection itself."
+      - id: c
+        text: "Restart the kubelet on the node so that it forgets the budget."
+        explanation: "The API server enforces budgets, not the kubelet."
+      - id: d
+        text: "Uncordon the node and drain again immediately."
+        explanation: "The budget is unchanged, so the second drain is blocked in the same way."
+    correct_option: b
+    explanation: "The budget allows zero disruptions, so the API server refuses the eviction. The honest repairs change capacity or the budget, not the protection itself."
+
+  - id: ats023-010-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Cordon, drain and uncordon a node."
+    source_readings:
+      - sections/section-010/module-02/course-03-cordon-drain-and-disruption-budgets.md
+    prompt: |-
+      After maintenance, `kubectl get nodes` shows the worker as `Ready,SchedulingDisabled`. Pods that the drain evicted are `Pending`. What brings the node back into service?
+    options:
+      - id: a
+        text: "Restart the kubelet, because it clears the unschedulable flag."
+        explanation: "The flag is on the Node object and a kubelet restart leaves it."
+      - id: b
+        text: "Delete the `unreachable` taint from the node."
+        explanation: "That taint is not the cause here; the node is `Ready`."
+      - id: c
+        text: "`kubectl uncordon` on the node, after which the scheduler can place the `Pending` Pods."
+        explanation: "Correct. A drain cordons the node and nothing removes the mark automatically. Uncordon removes it; evicted Pods are not moved back, but the scheduler places the new Pods."
+      - id: d
+        text: "Wait, because the node controller removes the cordon after a few minutes."
+        explanation: "No controller removes a cordon."
+    correct_option: c
+    explanation: "A drain cordons the node and nothing removes the mark automatically. Uncordon removes it; evicted Pods are not moved back, but the scheduler places the new Pods."
+
+  - id: ats023-010-q11
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Tell Pending from ContainerCreating."
+    source_readings:
+      - sections/section-010/module-03/course-01-reading-pod-state-and-events.md
+    prompt: |-
+      A Pod shows `ContainerCreating`, and `kubectl get pods -o wide` shows a node name for it. Which component reports the problem?
+    options:
+      - id: a
+        text: "The kubelet on that node, which prepares the sandbox, pulls the image and mounts volumes. Its events, such as `FailedMount`, show the cause."
+        explanation: "Correct. A node name means that the scheduler finished. `ContainerCreating` is the kubelet's phase of preparing the container."
+      - id: b
+        text: "The scheduler, because the Pod could not be placed."
+        explanation: "A Pod the scheduler could not place has no node name and shows `Pending`."
+      - id: c
+        text: "The Deployment controller, because the ReplicaSet is wrong."
+        explanation: "The controller created the Pod; it does not prepare containers."
+      - id: d
+        text: "The API server, because it rejected the Pod."
+        explanation: "A rejected Pod is not stored, so it would not appear in the list."
+    correct_option: a
+    explanation: "A node name means that the scheduler finished. `ContainerCreating` is the kubelet's phase of preparing the container."
+
+  - id: ats023-010-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Diagnose ErrImagePull and ImagePullBackOff."
+    source_readings:
+      - sections/section-010/module-03/course-02-image-and-configuration-failures.md
+    prompt: |-
+      A new Pod shows `ImagePullBackOff`. A teammate suggests running `kubectl logs` and then deleting the Pod. What should you do instead?
+    options:
+      - id: a
+        text: "Run `kubectl logs --previous` because the container ran once."
+        explanation: "A container that never started has no previous run."
+      - id: b
+        text: "Set `imagePullPolicy: Never` so that Kubernetes stops trying."
+        explanation: "That makes the Pod fail with a different error if the node has no copy."
+      - id: c
+        text: "Delete the Pod so that the kubelet starts again with the same image."
+        explanation: "The replacement has the same reference and fails in the same way."
+      - id: d
+        text: "Read the Pod events for the failed pull message and compare the image name and tag in the Deployment with the registry."
+        explanation: "Correct. The container never started, so it has no log. Deleting the Pod creates a replacement with the same bad reference. The event message names the cause."
+    correct_option: d
+    explanation: "The container never started, so it has no log. Deleting the Pod creates a replacement with the same bad reference. The event message names the cause."
+
+  - id: ats023-010-q13
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Diagnose CreateContainerConfigError caused by a missing ConfigMap or key."
+    source_readings:
+      - sections/section-010/module-03/course-02-image-and-configuration-failures.md
+    prompt: |-
+      A Pod shows `CreateContainerConfigError`. The event says that the key `mode` was not found in the ConfigMap `bridge-config`. The ConfigMap has the key `level` and is the team's source of truth. What is the correct repair?
+    options:
+      - id: a
+        text: "Replace the reference with the fixed value `high` in the Deployment."
+        explanation: "This starts the Pod but removes the single source of the setting."
+      - id: b
+        text: "Change the `configMapKeyRef` in the Deployment so that its key is `level`, and let the rollout replace the Pods."
+        explanation: "Correct. The Deployment names a key that does not exist. Fixing the reference keeps the ConfigMap as the single place for the setting."
+      - id: c
+        text: "Delete the ConfigMap so that Kubernetes recreates it."
+        explanation: "Kubernetes does not recreate a deleted ConfigMap, and the data would be lost."
+      - id: d
+        text: "Set `imagePullPolicy: Always` on the container."
+        explanation: "The image is not the problem; the configuration check failed."
+    correct_option: b
+    explanation: "The Deployment names a key that does not exist. Fixing the reference keeps the ConfigMap as the single place for the setting."
+
+  - id: ats023-010-q14
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Use rollout status and rollout undo to repair a failed rollout."
+    source_readings:
+      - sections/section-010/module-03/course-03-crashes-evictions-and-rollbacks.md
+    prompt: |-
+      A Deployment of four replicas was updated, and `kubectl rollout status` times out. The new Pods never become ready, the old Pods still answer requests, and the previous revision was healthy. What is the fastest safe repair?
+    options:
+      - id: a
+        text: "Delete the Deployment and create it again from memory."
+        explanation: "This removes history and the old Pods that still serve."
+      - id: b
+        text: "Scale the Deployment to zero until someone finds the cause."
+        explanation: "This stops the service that still works."
+      - id: c
+        text: "Run `kubectl rollout undo deployment/<name>` to return to the previous Pod template, then read the new Pods' events to find the cause."
+        explanation: "Correct. Undo copies the earlier ReplicaSet's template into the Deployment. It restores service quickly because the earlier revision was good, and the evidence of the failure remains in the events."
+      - id: d
+        text: "Wait for the progress deadline, because the controller then removes the new Pods."
+        explanation: "`ProgressDeadlineExceeded` is only a condition; the controller does not roll back."
+    correct_option: c
+    explanation: "Undo copies the earlier ReplicaSet's template into the Deployment. It restores service quickly because the earlier revision was good, and the evidence of the failure remains in the events."

@@ -1,0 +1,180 @@
+# Workloads for the failed-workloads playground.
+# probe runs. scout has a good revision 1 and a bad image in revision 2 (set by
+# setup.sh). shuttle names a ConfigMap that does not exist. bridge names a key
+# that is not in its ConfigMap. wait-volume mounts a missing ConfigMap volume.
+# drifter runs out of memory.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: probe-config
+  namespace: starfleet
+data:
+  greeting: hello
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bridge-config
+  namespace: starfleet
+data:
+  level: high
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: probe
+  template:
+    metadata:
+      labels:
+        app: probe
+    spec:
+      containers:
+      - name: probe
+        image: docker.io/library/busybox:1.37.0
+        command: ["sh", "-c", "echo greeting=$GREETING; sleep 3600"]
+        env:
+        - name: GREETING
+          valueFrom:
+            configMapKeyRef:
+              name: probe-config
+              key: greeting
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scout
+  template:
+    metadata:
+      labels:
+        app: scout
+    spec:
+      containers:
+      - name: scout
+        image: docker.io/library/busybox:1.37.0
+        command: ["sh", "-c", "sleep 3600"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shuttle
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shuttle
+  template:
+    metadata:
+      labels:
+        app: shuttle
+    spec:
+      containers:
+      - name: shuttle
+        image: docker.io/library/busybox:1.37.0
+        command: ["sh", "-c", "sleep 3600"]
+        env:
+        - name: MODE
+          valueFrom:
+            configMapKeyRef:
+              name: shuttle-settings
+              key: mode
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bridge
+  template:
+    metadata:
+      labels:
+        app: bridge
+    spec:
+      containers:
+      - name: bridge
+        image: docker.io/library/busybox:1.37.0
+        command: ["sh", "-c", "sleep 3600"]
+        env:
+        - name: LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: bridge-config
+              key: mode
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wait-volume
+  namespace: starfleet
+  labels:
+    app: wait-volume
+spec:
+  containers:
+  - name: wait-volume
+    image: docker.io/library/busybox:1.37.0
+    command: ["sh", "-c", "sleep 3600"]
+    volumeMounts:
+    - name: settings
+      mountPath: /settings
+  volumes:
+  - name: settings
+    configMap:
+      name: wait-volume-settings
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drifter
+  namespace: outpost
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drifter
+  template:
+    metadata:
+      labels:
+        app: drifter
+    spec:
+      containers:
+      - name: drifter
+        image: docker.io/library/python:3.13-alpine
+        command:
+        - python
+        - -c
+        - |
+          data = b"x" * (256 * 1024 * 1024)
+          print("allocated", len(data), flush=True)
+          import time
+          time.sleep(3600)
+        resources:
+          requests:
+            memory: 32Mi
+          limits:
+            memory: 64Mi

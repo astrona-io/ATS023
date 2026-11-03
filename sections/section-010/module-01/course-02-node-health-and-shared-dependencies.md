@@ -5,7 +5,7 @@ exam_objectives:
 ---
 # Node Health And Shared Dependencies
 
-Several unrelated Pods fail only on one worker. Their shared node is a stronger initial hypothesis than an identical application bug. Failure distribution helps select the investigation scope.
+Several unrelated Pods fail only on one worker. Their shared node is a stronger first hypothesis than the same bug in every application. Failure distribution helps you choose the scope of the investigation, and the node, its Pods and its events let you test the hypothesis.
 
 ## Learning objectives
 
@@ -15,62 +15,77 @@ Several unrelated Pods fail only on one worker. Their shared node is a stronger 
 
 ## Before you start
 
-This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. The playground for this module is a `kind` cluster with one control plane node and one worker node whose kubelet is stopped. The `starfleet` namespace has the `probe` Deployment with two replicas and the `shuttle` Pod. The `outpost` namespace has the `drifter` Pod. The commands below only read state.
 
 ## Responsible components and behavior
 
-Several unrelated workloads fail on the same node. That pattern suggests a shared dependency rather than identical application bugs. A node's kubelet reports conditions such as readiness and resource pressure, which help the control plane decide how to treat workloads and scheduling on that node.
+When several unrelated workloads fail on the same node, the pattern suggests a shared dependency and not identical application bugs. The kubelet reports conditions such as readiness and resource pressure, and the control plane uses them to decide how to treat workloads and scheduling on that node. The node's runtime, network path, system resources and its link to the control plane are all part of the picture.
 
-A NotReady condition can result from node or kubelet problems, but the condition alone does not identify the root cause. The node's runtime, network connectivity, system resources and communication with the control plane are relevant. Existing containers may behave differently from new startup attempts, so compare the timing and affected operations.
+A `NotReady` or `Unknown` condition can result from node or kubelet problems, but the condition alone does not identify the root cause. Existing containers may behave differently from new start attempts, so compare the timing and the kind of operation that failed.
 
-Memory, disk and process pressure can affect execution and lead to eviction. Eviction removes a Pod to protect node operation under configured conditions. A controller may request a replacement, but that replacement needs eligible capacity elsewhere. Repeated eviction and replacement do not guarantee that the underlying pressure disappears.
+## Using failure distribution to choose scope
 
-Disk pressure can involve image filesystems, logs or writable data. A Pod's memory-limit termination is different from node-wide memory pressure: one is tied to a container boundary, while the other concerns node resource availability. Similar symptoms can require different sizing or cleanup decisions.
+If one application fails on every node, inspect its image, configuration and dependencies. If several unrelated applications fail only on one node, inspect that node's runtime, kubelet, network path and resource conditions. If failures cross nodes but share one storage backend, that backend is more relevant than any application's code. This is a hypothesis method, not a certainty: a shared release can affect several applications, and a network outage can affect only some destinations.
 
-Storage failures can be shared across many nodes if the external system is unavailable. A volume may fail to attach, mount or serve operations. Read the claim, volume and driver evidence alongside node health. A Ready node does not prove that every external storage dependency works.
+<!-- astrona:playground:renew -->
 
-Start with the failure distribution: one container, one node, one namespace or many workloads. Then inspect the shared components suggested by that distribution. Broad restarts without a supported explanation can destroy useful evidence and increase disruption.
+In the playground, list all Pods with the node that each one uses:
 
-## Using Failure Distribution To Choose Scope
+```sh
+export KUBECONFIG="$(astrona kubeconfig ats-023-playground-010-01)"
+kubectl get pods -A -o wide
+```
 
-If one application fails on every node, inspect its common image, configuration and dependencies. If several unrelated applications fail only on one node, inspect that node's runtime, kubelet, network path and resource conditions. If failures cross nodes but share one storage backend, the common backend may be more relevant than either application's code.
+Every Pod of the `starfleet` and `outpost` namespaces sits on the worker node. Their `STATUS` column may still say `Running`, because the node controller has not yet evicted them. The `READY` column and the age of the status tell you more. Filter the Pods of one node with a field selector:
 
-This is a hypothesis method, not a certainty. A shared release can affect several applications, and a network outage can affect only selected destinations. The distribution narrows candidates; timestamps and component evidence test the explanation. Avoid turning a pattern into a conclusion before checking the relevant boundary.
+```sh
+kubectl get pods -A --field-selector spec.nodeName=astro-ats-023-playground-010-01-worker
+```
 
-Node conditions can identify memory, disk or process pressure. Eviction aims to protect node operation when resource availability becomes unsafe under configured policy. The evicted Pod's controller may request a replacement, but availability still depends on another eligible location. Eviction is therefore a protection action with a workload consequence, not an automatic fix for the resource shortage.
+The command lists exactly the Pods bound to the failing node. When the same node name appears for every failing workload, the node is the common factor. If the failing Pods were spread over several nodes, the node hypothesis would be wrong.
 
-## Storage Failure Stages
+## Eviction and pressure
 
-A provisioned volume can fail to attach to a node, mount into a Pod or serve application operations after mounting. These stages involve different components and evidence. A bound claim proves a storage association, not that every later operation has completed.
+Memory, disk and process pressure can affect execution and lead to eviction. The kubelet evicts a Pod when a resource falls under its threshold, to protect the node. A controller may request a replacement, but the replacement needs an eligible node, so eviction does not remove the pressure. Eviction by the kubelet is different from eviction by the node controller. When a node stops reporting, the node controller waits for the toleration time of 300 seconds on the `unreachable` taint, and then deletes the Pods so that the controllers can create them elsewhere.
 
-A remote backend outage can affect otherwise Ready nodes. A topology mismatch can prevent access from one location while storage remains healthy elsewhere. A local volume can depend on one node whose failure removes access to the data. The backend's actual availability contract determines what recovery is possible.
+A Pod's memory limit kill is a third event. It is tied to one container boundary: the container exceeds its own limit and the kernel ends it with exit code 137 and the reason `OOMKilled`. The node itself stays healthy. Node-wide memory pressure, in contrast, shows `MemoryPressure=True` on the Node, and it can evict Pods that never exceeded their limits.
 
-Choose the smallest supported scope for correction. Replacing one faulty node can help a node-specific runtime failure; restarting every workload may add disruption without repairing an external storage outage. Preserve evidence and verify from representative consumers after the shared dependency recovers.
+Read the pressure conditions and the resource numbers that the scheduler uses:
 
-## Work through the decision
+```sh
+kubectl get node astro-ats-023-playground-010-01-worker -o jsonpath='{.status.conditions[*].type}'
+kubectl describe node astro-ats-023-playground-010-01-worker
+```
 
-A runtime outage on one node can stop new container starts while other nodes remain healthy. A storage-service outage can affect consumers across many nodes instead. Group symptoms by operation, location and time before choosing which shared component to inspect.
+The first command prints the condition names. The `describe` output adds the `Capacity`, `Allocatable` and `Allocated resources` sections and the `Events` section at the end. Node events such as `NodeNotReady` come from the node controller and name the node as their object.
 
-Container memory-limit termination and node-wide memory pressure are also different boundaries. The first concerns a process's permitted allocation; the second can cause node eviction decisions affecting several workloads. Replacing evicted Pods needs capacity elsewhere and does not repair the original pressure. Broad restarts can remove useful evidence without addressing either cause.
+## Storage failure stages
+
+A provisioned volume can fail to attach to a node, mount into a Pod or serve operations after it is mounted. These stages involve different components and different evidence. A bound claim proves a storage association, not that every later step has completed. A remote backend outage can affect otherwise `Ready` nodes, a topology mismatch can block access from one zone only, and a local volume depends on the one node that holds the data. Read the claim, the volume and the driver evidence next to the node health, because a `Ready` node does not prove that every external dependency works.
+
+## Choose the smallest correction
+
+Replacing one faulty node can help a node-specific runtime failure. Restarting every workload adds disruption and does not repair an external storage outage or a stopped kubelet. Broad restarts without a supported explanation can also destroy useful evidence. Group symptoms by operation, location and time, pick the one shared component that the group points to, correct it and verify from a representative consumer after the dependency recovers.
 
 ```mermaid
 flowchart TB
-    N0["Observed failure distribution"]
-    N1["Shared dependency hypothesis"]
-    N2["Node or external evidence"]
-    N3["Focused correction"]
-    N4["Original operation verification"]
-    N0 --> N1
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
+    A["Failure distribution"] --> B["Shared dependency hypothesis"]
+    B --> C["Node or external evidence"]
+    C --> D["Focused correction"]
+    D --> E["Original operation works"]
 ```
 
-The affected population narrows scope, while specific dependency evidence establishes the cause.
+The diagram shows that the affected population narrows the scope, while evidence from the specific dependency establishes the cause.
 
-The affected population narrows scope, while specific dependency evidence establishes the cause.
+## Worked example
+
+Suppose `probe` has two replicas and `shuttle` and `drifter` run in two namespaces, all on the worker node. Users report that all three stop answering at the same time. The failures share the node, they cross namespaces and they started together. Those three facts point at the node and away from the three applications.
+
+The next evidence is the node's `Ready` condition and its Lease. If both are stale, the kubelet or its link to the API server stopped, and the repair is on the node: start the kubelet, then wait for a fresh `Ready=True`. If the conditions are fresh and healthy but the Pods fail, look at the runtime, the network plugin and the storage path instead. The order matters. Node evidence is cheap to read and covers many workloads at once. Only after the node evidence is clean does it make sense to open one application and read its logs.
+
+Record what you saw before you repair anything. Events expire, and the node's own log is the only place that keeps the first error.
 
 ## Common pitfalls
 
 > [!WARNING]
-> Node readiness is not a guarantee that every dependency works. Container memory limits, node pressure and storage outages are distinct failure mechanisms.
+> Node readiness is not a guarantee that every dependency works. A container memory limit kill, node pressure eviction and a storage outage are three different mechanisms. Do not restart all workloads to find out which one applies, because you lose the evidence.

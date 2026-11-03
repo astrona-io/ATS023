@@ -1,0 +1,71 @@
+# Troubleshoot Cluster Components Capstone (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-capstone-020
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/python:3.13-alpine
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+
+# Starting state: four faults in the control plane and in kube-system. The
+# faults are left in place on purpose.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and introduce the four faults
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Repair all four faults
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: apiserver-etcd-address
+    description: The API server uses the etcd client port and is ready
+    type: file
+    source: validation/validate-apiserver-etcd-address.sh
+    hint: kubectl does not work. Use crictl logs on the node and compare --etcd-servers with the etcd listen address.
+  - name: controller-manager-flag
+    description: The controller manager runs without the invalid flag
+    type: file
+    source: validation/validate-controller-manager-flag.sh
+    hint: A Deployment with no ReplicaSet points at the controller manager. Read its previous log.
+  - name: scheduler-kubeconfig
+    description: The scheduler runs and renews its Lease
+    type: file
+    source: validation/validate-scheduler-kubeconfig.sh
+    hint: Pending Pods with no events point at the scheduler. Compare its kubeconfig flag with the files on the node.
+  - name: kube-proxy-daemonset
+    description: kube-proxy is Ready on both nodes with its original image
+    type: file
+    source: validation/validate-kube-proxy-daemonset.sh
+    hint: Look at the DaemonSet rollout history and return to the working revision.
+  - name: scout-running
+    description: scout runs through a ReplicaSet on scheduler-placed Pods
+    type: file
+    source: validation/validate-scout-running.sh
+    hint: Do not set nodeName and do not create the Pods by hand. Fix the components.
+  - name: service-and-manifests
+    description: probe answers through its Service and the manifest directory is clean
+    type: file
+    source: validation/validate-service-and-manifests.sh
+    hint: Keep backups out of /etc/kubernetes/manifests and do not change the etcd manifest.
+
+teardown:
+  keepCluster: false

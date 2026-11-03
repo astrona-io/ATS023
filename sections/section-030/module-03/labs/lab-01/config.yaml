@@ -1,0 +1,60 @@
+# Fix an OOMKilled workload and quota rejections (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-030-03-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/python:3.13-alpine
+    - docker.io/library/busybox:1.37.0
+
+# Starting state: scout is OOMKilled by its memory limit and the starfleet quota
+# cannot hold a larger scout; drifter in outpost is rejected by a quota that
+# requires memory values no default supplies.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the quotas, LimitRange and workloads with their faults
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+
+# Applied only by astrona test: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Raise the limit and quota, and add a LimitRange in outpost
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: scout-not-oomkilled
+    description: scout has a fitting memory limit, 2 ready replicas and no OOMKilled container
+    type: file
+    source: validation/validate-scout-not-oomkilled.sh
+    hint: Read lastState.terminated of a scout Pod. The process needs about 150Mi. The LimitRange allows at most 256Mi per container.
+  - name: starfleet-quota-and-probe-intact
+    description: The starfleet quota still limits memory and probe is unchanged
+    type: file
+    source: validation/validate-starfleet-quota-and-probe-intact.sh
+    hint: Change a value in the quota. Do not delete it and do not shrink probe.
+  - name: drifter-admitted
+    description: drifter has 2 ready replicas with memory requests and limits
+    type: file
+    source: validation/validate-drifter-admitted.sh
+    hint: Read the events of the drifter ReplicaSet. Set resources in the Deployment or add a LimitRange with defaults.
+  - name: outpost-quota-intact
+    description: The outpost quota still enforces memory and Pod count
+    type: file
+    source: validation/validate-outpost-quota-intact.sh
+    hint: Fix the workload or add defaults. Do not delete the quota.
+
+teardown:
+  keepCluster: false

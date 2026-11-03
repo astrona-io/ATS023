@@ -5,10 +5,10 @@ exam_objectives:
 ---
 # Summary
 
-Measurements, desired declarations and runtime limits describe different facts. The observation context and available metrics service determine whether a result addresses the intended cluster and workload.
+A declaration, a status and a measurement are three different facts. The specification says what is wanted, the status says what a controller observed, and the Metrics API says how much CPU and memory containers used in a short window. A good diagnosis names the source of each fact and checks the cluster context before it trusts any output.
 
-Allocation, quota, placement and runtime enforcement require different diagnosis. Include all applicable containers and effective defaults before changing resource declarations or interpreting one consumption sample.
+Requests, limits and usage answer different questions. The scheduler uses requests to place a Pod. The kubelet and the kernel enforce limits, which can throttle CPU or kill a container that exceeds its memory limit. Measured usage informs the choice of both values but changes with every sample.
 
-You can now account for the actual admitted workload and classify a resource failure. A justified size preserves application requirements rather than merely making a Pending status disappear.
+The effective demand of a Pod is the sum of its regular containers, adjusted for init containers and defaults from a LimitRange. Read the stored Pod and not only the template. A measurement carries a timestamp and a window, so store both when you keep it as evidence.
 
 <!-- astrona:playground:destroy -->

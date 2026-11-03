@@ -1,0 +1,334 @@
+# Knowledge check for section 020. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats023-020
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-020
+  title: "Troubleshoot Cluster Components"
+questions:
+  - id: ats023-020-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Identify which control-plane component is responsible for creating Pod objects from a Deployment"
+    source_readings:
+      - sections/section-020/module-01/course-01-control-plane-and-worker-responsibilities.md
+    prompt: "The `probe` Deployment in `starfleet` exists and shows two desired replicas, but `kubectl get replicasets -n starfleet` returns no ReplicaSet for it. Which component did not do its job?"
+    options:
+      - id: a
+        text: "The scheduler"
+        explanation: "The scheduler assigns nodes to Pods that already exist. It does not create ReplicaSets."
+      - id: b
+        text: "The kubelet"
+        explanation: "The kubelet runs Pods that are assigned to its node. It does not create ReplicaSets."
+      - id: c
+        text: "The controller manager"
+        explanation: "Correct. The Deployment controller, which runs in the controller manager, creates the ReplicaSet. No ReplicaSet means that step did not happen."
+      - id: d
+        text: "etcd"
+        explanation: "etcd stored the Deployment, because the Deployment object exists. It creates no other objects."
+    correct_option: c
+    explanation: "The Deployment controller, which runs in the controller manager, creates the ReplicaSet. No ReplicaSet means that step did not happen."
+
+  - id: ats023-020-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what the scheduler writes into a Pod and what a missing event list means"
+    source_readings:
+      - sections/section-020/module-03/course-01-scheduler-role-and-pending-pods.md
+    prompt: "The `scout` Pod in `starfleet` is Pending. `kubectl describe pod scout` shows an empty Events section and the node field shows `<none>`. What does this most likely mean?"
+    options:
+      - id: a
+        text: "The node has too little memory, so the scheduler rejected the Pod."
+        explanation: "A rejection by a working scheduler would leave a `FailedScheduling` event with the reason."
+      - id: b
+        text: "No scheduler has processed the Pod, so the scheduler is probably not running."
+        explanation: "Correct. A running scheduler either assigns a node or records a FailedScheduling event. An empty event list points at a scheduler that did nothing."
+      - id: c
+        text: "The image cannot be pulled."
+        explanation: "The image is pulled by the kubelet after a node is assigned. This Pod has no node yet."
+      - id: d
+        text: "The Pod has a readiness probe that fails."
+        explanation: "A readiness probe runs after the container starts, which needs a node."
+    correct_option: b
+    explanation: "A running scheduler either assigns a node or records a FailedScheduling event. An empty event list points at a scheduler that did nothing."
+
+  - id: ats023-020-q03
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Describe how the kubelet starts control-plane components from static Pod manifests"
+    source_readings:
+      - sections/section-020/module-02/course-01-static-pod-manifests-and-the-kubelet.md
+    prompt: "An administrator runs `kubectl delete pod kube-scheduler-astro-control-plane -n kube-system` hoping to stop the scheduler for a test. A short time later the Pod is back. Why?"
+    options:
+      - id: a
+        text: "The Pod is a mirror of a static Pod, and the kubelet recreates it from the manifest file."
+        explanation: "Correct. The manifest file in the static Pod directory is the source of truth. The API object is only a read-only mirror."
+      - id: b
+        text: "A ReplicaSet creates a replacement Pod."
+        explanation: "Static Pods have no ReplicaSet owner."
+      - id: c
+        text: "etcd restores deleted objects automatically."
+        explanation: "etcd stores what the API server writes. It does not restore deleted objects."
+      - id: d
+        text: "The scheduler recreates its own Pod."
+        explanation: "The scheduler does not create Pods, least of all its own."
+    correct_option: a
+    explanation: "The manifest file in the static Pod directory is the source of truth. The API object is only a read-only mirror."
+
+  - id: ats023-020-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose the right tool to read a crashed component when the API server is down"
+    source_readings:
+      - sections/section-020/module-02/course-01-static-pod-manifests-and-the-kubelet.md
+    prompt: "`kubectl` returns `connection refused` on port 6443. You are on the control-plane node. Which command shows whether the API server container is crash-looping and why?"
+    options:
+      - id: a
+        text: "`kubectl logs -n kube-system kube-apiserver-<node>`"
+        explanation: "This command needs the API server that is down."
+      - id: b
+        text: "`crictl ps -a` to list the container attempts, then `crictl logs` for the newest attempt"
+        explanation: "Correct. The container runtime works without the API server. A growing ATTEMPT count shows the restarts, and the log names the cause."
+      - id: c
+        text: "`kubectl get events -A`"
+        explanation: "Events are stored through the API server, which is not answering."
+      - id: d
+        text: "`etcdctl endpoint health` with no flags"
+        explanation: "This tests etcd, not the API server container, and it fails without the certificate flags."
+    correct_option: b
+    explanation: "The container runtime works without the API server. A growing ATTEMPT count shows the restarts, and the log names the cause."
+
+  - id: ats023-020-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Tell a connection error, a certificate error and a permission error apart"
+    source_readings:
+      - sections/section-020/module-02/course-02-api-server-flags-and-error-types.md
+    prompt: "Three engineers report errors. A: `The connection to the server 127.0.0.1:6443 was refused`. B: `x509: certificate signed by unknown authority`. C: `pods is forbidden: User \"system:serviceaccount:starfleet:scout\" cannot list resource \"pods\"`. Which pairing of error and first action is right?"
+    options:
+      - id: a
+        text: "A: add a RoleBinding. B: restart the scheduler. C: open port 6443."
+        explanation: "Each pairing is wrong. A RoleBinding fixes only a permission error."
+      - id: b
+        text: "A: check that the API server container runs and listens. B: check the certificate authority in the kubeconfig. C: check the RBAC rules for the service account."
+        explanation: "Correct. Refused means nothing listens, x509 means trust does not match, and Forbidden means the caller is known but no rule allows the action."
+      - id: c
+        text: "A: renew the client certificate. B: add a ClusterRole. C: restart etcd."
+        explanation: "Each pairing is wrong. A client certificate is not involved in a refused connection."
+      - id: d
+        text: "A: check RBAC. B: check the port. C: check the container."
+        explanation: "The three actions belong to the other errors, in the wrong order."
+    correct_option: b
+    explanation: "Refused means nothing listens, x509 means trust does not match, and Forbidden means the caller is known but no rule allows the action."
+
+  - id: ats023-020-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain what the --etcd-servers flag and the etcd client port 2379 mean for the API server"
+    source_readings:
+      - sections/section-020/module-02/course-02-api-server-flags-and-error-types.md
+    prompt: "After a manifest edit, the API server container keeps restarting. Its log shows repeated failures to connect to `https://127.0.0.1:2399`. The etcd manifest has `--listen-client-urls=https://127.0.0.1:2379`. What is the correct repair?"
+    options:
+      - id: a
+        text: "Change `--listen-client-urls` in the etcd manifest to port 2399."
+        explanation: "This moves etcd away from the standard client port and leaves other clients broken. The API server flag has the typo."
+      - id: b
+        text: "Delete the etcd data directory so that etcd starts clean."
+        explanation: "This deletes all cluster state and does not fix a wrong address."
+      - id: c
+        text: "Set `--etcd-servers=https://127.0.0.1:2379` in a copy of the API server manifest and move the copy into the manifest directory."
+        explanation: "Correct. The API server flag names the wrong port. A copy edited outside the watched directory and moved in one step is the safe way."
+      - id: d
+        text: "Regenerate the etcd certificates."
+        explanation: "The log shows a failed connection to a port, not a certificate error."
+    correct_option: c
+    explanation: "The API server flag names the wrong port. A copy edited outside the watched directory and moved in one step is the safe way."
+
+  - id: ats023-020-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Run an etcd health check with the required certificate flags"
+    source_readings:
+      - sections/section-020/module-02/course-03-etcd-health-and-certificates.md
+    prompt: "On the control-plane node you run `etcdctl endpoint health --endpoints=https://127.0.0.1:2379` and the request is rejected. etcd runs and requires client certificates. What is missing?"
+    options:
+      - id: a
+        text: "`--cacert`, `--cert` and `--key` with the etcd CA and a client certificate and key"
+        explanation: "Correct. etcd uses mutual TLS on its client port, so the client must trust the etcd CA and present its own certificate."
+      - id: b
+        text: "The peer port 2380 in `--endpoints`"
+        explanation: "The peer port is for traffic between etcd members. Clients use 2379."
+      - id: c
+        text: "A kubeconfig file"
+        explanation: "`etcdctl` does not read a kubeconfig. It uses its own flags."
+      - id: d
+        text: "A running scheduler"
+        explanation: "The scheduler has no role in etcd requests."
+    correct_option: a
+    explanation: "etcd uses mutual TLS on its client port, so the client must trust the etcd CA and present its own certificate."
+
+  - id: ats023-020-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Use the two views of etcd to place a fault"
+    source_readings:
+      - sections/section-020/module-02/course-03-etcd-health-and-certificates.md
+    prompt: "`etcdctl endpoint health` run in the etcd container reports healthy. `kubectl get --raw=/readyz/etcd` reports a failure, and the etcd log shows no incoming client requests. Where is the fault?"
+    options:
+      - id: a
+        text: "In the etcd data directory"
+        explanation: "Then etcd would be unhealthy by its own check."
+      - id: b
+        text: "In the etcd serving certificate"
+        explanation: "A certificate fault shows TLS errors in the etcd log, and the direct check would fail too."
+      - id: c
+        text: "In the scheduler"
+        explanation: "The scheduler has no part in the API server's etcd connection."
+      - id: d
+        text: "In the API server's connection to etcd, such as the `--etcd-servers` address or a client certificate path"
+        explanation: "Correct. etcd is healthy and receives nothing, so the client side of the connection is wrong."
+    correct_option: d
+    explanation: "etcd is healthy and receives nothing, so the client side of the connection is wrong."
+
+  - id: ats023-020-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what a working scheduler records on a Pod that fits no node"
+    source_readings:
+      - sections/section-020/module-03/course-01-scheduler-role-and-pending-pods.md
+    prompt: "The `shuttle` Pod requests 64 CPUs and every node has 4. The scheduler is healthy. What does `kubectl describe pod` show?"
+    options:
+      - id: a
+        text: "An empty Events section, because the scheduler is silent when it fails"
+        explanation: "A working scheduler records the reason."
+      - id: b
+        text: "A `FailedScheduling` event from `default-scheduler` that names insufficient CPU"
+        explanation: "Correct. The event comes from the scheduler and names the reason, so the cause is the request, not the control plane."
+      - id: c
+        text: "A `CrashLoopBackOff` status"
+        explanation: "This status needs a started container, which needs a node."
+      - id: d
+        text: "An `ImagePullBackOff` status"
+        explanation: "Image pulls happen on a node after assignment."
+    correct_option: b
+    explanation: "The event comes from the scheduler and names the reason, so the cause is the request, not the control plane."
+
+  - id: ats023-020-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read the scheduler log and manifest to find why the scheduler crashes"
+    source_readings:
+      - sections/section-020/module-03/course-02-scheduler-static-pod-and-leader-election.md
+    prompt: "The scheduler Pod is in `CrashLoopBackOff`. The previous log says it cannot read `/etc/kubernetes/scheduler-old.conf`. The directory `/etc/kubernetes` on the node holds `scheduler.conf`. What should you do?"
+    options:
+      - id: a
+        text: "Set `--leader-elect=false` so that the scheduler no longer needs the file."
+        explanation: "Leader election does not read the kubeconfig. This hides a lease problem and does not fix the path."
+      - id: b
+        text: "Create an empty file `scheduler-old.conf` on the node."
+        explanation: "An empty file is not a valid kubeconfig, and the manifest still names the wrong file."
+      - id: c
+        text: "Delete the mirror Pod."
+        explanation: "The kubelet recreates it from the same manifest and the same error returns."
+      - id: d
+        text: "Correct the `--kubeconfig` flag in a copy of the manifest to `/etc/kubernetes/scheduler.conf` and move the copy into the manifest directory."
+        explanation: "Correct. The flag names a file that does not exist. The fix is the flag, applied safely."
+    correct_option: d
+    explanation: "The flag names a file that does not exist. The fix is the flag, applied safely."
+
+  - id: ats023-020-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Use the leader election Lease as evidence"
+    source_readings:
+      - sections/section-020/module-03/course-02-scheduler-static-pod-and-leader-election.md
+    prompt: "The scheduler Pod shows Running and Ready, but new Pods stay Pending without events. The Lease `kube-scheduler` has a `holderIdentity`, and its `renewTime` has not changed for several minutes. What is the most likely state?"
+    options:
+      - id: a
+        text: "The holder stopped renewing, so the scheduler that owned the Lease is not working, and the Pod status is misleading."
+        explanation: "Correct. A Lease that is not renewed shows that the holder is no longer active. Process status alone is not proof of scheduling."
+      - id: b
+        text: "The scheduler is healthy and the Lease is only informational."
+        explanation: "A healthy holder renews every few seconds."
+      - id: c
+        text: "The nodes are full."
+        explanation: "A full cluster leaves FailedScheduling events from a working scheduler."
+      - id: d
+        text: "The API server has lost etcd."
+        explanation: "The Lease was readable through the API, so the API server and etcd answer."
+    correct_option: a
+    explanation: "A Lease that is not renewed shows that the holder is no longer active. Process status alone is not proof of scheduling."
+
+  - id: ats023-020-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain what kube-proxy does and what happens when it stops"
+    source_readings:
+      - sections/section-020/module-03/course-03-kube-proxy-and-kube-system-add-ons.md
+    prompt: "`kube-proxy` is stopped on every node. A Service that existed before keeps answering, but a Service created now does not. Why?"
+    options:
+      - id: a
+        text: "The Service address is stored only in DNS."
+        explanation: "DNS resolves names. The forwarding of the Service address is done by node rules."
+      - id: b
+        text: "The rules in the node kernel stay in place, but nothing writes rules for new Services."
+        explanation: "Correct. `kube-proxy` writes the forwarding rules from the API. Without it, old rules persist and new ones are missing."
+      - id: c
+        text: "The API server refuses new Services when `kube-proxy` is down."
+        explanation: "The API server accepts the Service. The forwarding is what is missing."
+      - id: d
+        text: "The scheduler has to place the Service."
+        explanation: "The scheduler places Pods, not Services."
+    correct_option: b
+    explanation: "`kube-proxy` writes the forwarding rules from the API. Without it, old rules persist and new ones are missing."
+
+  - id: ats023-020-q13
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Repair a kube-system DaemonSet after a bad change"
+    source_readings:
+      - sections/section-020/module-03/course-03-kube-proxy-and-kube-system-add-ons.md
+    prompt: "After a change, `kubectl -n kube-system get daemonset kube-proxy` shows DESIRED 2 and READY 1. The new Pod is in `ImagePullBackOff` because of a mistyped image tag. What is the safest fix?"
+    options:
+      - id: a
+        text: "Delete the failing Pod so that it is recreated"
+        explanation: "The new Pod uses the same template and the same bad image."
+      - id: b
+        text: "Edit the `kube-proxy` ConfigMap"
+        explanation: "The ConfigMap holds configuration, not the image."
+      - id: c
+        text: "Run `kubectl -n kube-system rollout undo daemonset/kube-proxy` and check that two Pods are Ready"
+        explanation: "Correct. The undo returns to the previous working revision of the DaemonSet template."
+      - id: d
+        text: "Delete the DaemonSet"
+        explanation: "The kube-proxy DaemonSet and its ConfigMap are created by cluster setup. Deleting it removes forwarding on all nodes."
+    correct_option: c
+    explanation: "The undo returns to the previous working revision of the DaemonSet template."
+
+  - id: ats023-020-q14
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Plan the repair order when several components fail"
+    source_readings:
+      - sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
+    prompt: "A cluster has a wrong etcd port in the API server manifest, an invalid flag in the controller manager manifest and a bad `kube-proxy` image. `kubectl` does not work. In which order do you repair them?"
+    options:
+      - id: a
+        text: "`kube-proxy` first, then the controller manager, then the API server"
+        explanation: "Both later repairs need the API, and the DaemonSet rollback also needs the controller manager."
+      - id: b
+        text: "The controller manager first, because Deployments matter most"
+        explanation: "Its repair can be done on the node, but the result cannot be checked until the API works."
+      - id: c
+        text: "All three at once, with no check between them"
+        explanation: "Changes made blind can hide which edit fixed what."
+      - id: d
+        text: "The API server first on the node, then the controller manager, then `kube-proxy` through the API"
+        explanation: "Correct. Every check goes through the API, so it comes first. The DaemonSet rollback is handled by a controller in the controller manager, so that comes before `kube-proxy`."
+    correct_option: d
+    explanation: "Every check goes through the API, so it comes first. The DaemonSet rollback is handled by a controller in the controller manager, so that comes before `kube-proxy`."

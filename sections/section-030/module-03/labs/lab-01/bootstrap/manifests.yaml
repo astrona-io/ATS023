@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: starfleet
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 512Mi
+    limits.memory: 768Mi
+    pods: "10"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: container-limits
+  namespace: starfleet
+spec:
+  limits:
+  - type: Container
+    max:
+      memory: 256Mi
+    default:
+      memory: 128Mi
+    defaultRequest:
+      cpu: 20m
+      memory: 32Mi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: outpost-quota
+  namespace: outpost
+spec:
+  hard:
+    requests.memory: 256Mi
+    limits.memory: 512Mi
+    pods: "5"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: probe
+  template:
+    metadata:
+      labels:
+        app: probe
+    spec:
+      containers:
+      - name: probe
+        image: docker.io/library/busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - sleep 3600
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: scout
+  template:
+    metadata:
+      labels:
+        app: scout
+    spec:
+      containers:
+      - name: scout
+        image: docker.io/library/python:3.13-alpine
+        command:
+        - python
+        - -c
+        - |
+          import time
+          buffer = bytearray(b"x") * (150 * 1024 * 1024)
+          print("allocated", len(buffer), flush=True)
+          time.sleep(3600)
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 96Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drifter
+  namespace: outpost
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drifter
+  template:
+    metadata:
+      labels:
+        app: drifter
+    spec:
+      containers:
+      - name: drifter
+        image: docker.io/library/busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - sleep 3600

@@ -11,7 +11,7 @@ scope:
   title: Troubleshoot clusters and nodes
 placement:
   position: after
-  reading: sections/section-010/module-01/course-03-summary.md
+  reading: sections/section-010/module-01/course-04-summary.md
 questions:
 - id: ats023-section-010-q01
   type: single_choice

@@ -1,0 +1,348 @@
+# Knowledge check for section 030. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats023-030
+course_id: ATS023
+exam_code: CKA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-030
+  title: "Monitor cluster and application resource usage"
+questions:
+  - id: ats023-030-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Choose the observation that answers a question about measured usage"
+    source_readings:
+      - sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
+    prompt: |-
+      The `probe` Deployment in `starfleet` asks for two replicas. You need to know how much memory its Pods used in the last minute. Which command reads that?
+    options:
+      - id: a
+        text: "`kubectl -n starfleet get deployment probe -o yaml`"
+        explanation: "The Deployment holds the desired and observed replica state and the declared requests, not measured usage."
+      - id: b
+        text: "`kubectl -n starfleet describe deployment probe`"
+        explanation: "Describe shows conditions and events. It does not show measured usage."
+      - id: c
+        text: "`kubectl -n starfleet top pods`"
+        explanation: "Correct. `kubectl top` reads recent usage from the Metrics API served by metrics-server."
+      - id: d
+        text: "`kubectl -n starfleet get events`"
+        explanation: "Events record what controllers and the kubelet did, not how much memory a container used."
+    correct_option: c
+    explanation: "`kubectl top` reads recent usage from the Metrics API served by metrics-server."
+
+  - id: ats023-030-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Distinguish a request from measured usage"
+    source_readings:
+      - sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
+    prompt: |-
+      A `scout` Pod requests `1Gi` of memory but `kubectl top` shows it uses `40Mi`. A new Pod that needs `1Gi` stays `Pending` on a node with `600Mi` of allocatable memory left. Why?
+    options:
+      - id: a
+        text: "The scheduler compares the sum of requests with allocatable capacity, so the `1Gi` request does not fit."
+        explanation: "Correct. The scheduler uses declared requests, not live usage."
+      - id: b
+        text: "The scheduler compares measured usage with the node capacity, and `40Mi` is too small."
+        explanation: "The scheduler never uses measured usage."
+      - id: c
+        text: "Metrics-server blocks Pods that use less than they request."
+        explanation: "Metrics-server only reports usage and blocks nothing."
+      - id: d
+        text: "The kubelet refuses Pods whose request is higher than their usage."
+        explanation: "The kubelet does not compare request and usage when it admits a Pod."
+    correct_option: a
+    explanation: "The scheduler uses declared requests, not live usage."
+
+  - id: ats023-030-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read memory and CPU units correctly"
+    source_readings:
+      - sections/section-030/module-01/course-02-expressing-resource-needs-for-every-container.md
+    prompt: |-
+      A container sets `limits.memory: 512M` and a colleague expects `512Mi`. What is true?
+    options:
+      - id: a
+        text: "They are the same value."
+        explanation: "`M` is decimal (512 000 000 bytes) and `Mi` is binary (536 870 912 bytes)."
+      - id: b
+        text: "`512M` is about five percent smaller than `512Mi`."
+        explanation: "Correct. `M` means powers of 1000 and `Mi` means powers of 1024."
+      - id: c
+        text: "`512M` is invalid and the API server rejects it."
+        explanation: "Both suffixes are valid memory quantities."
+      - id: d
+        text: "`512M` means 512 millibytes."
+        explanation: "A lowercase `m` means thousandths. An uppercase `M` means megabytes."
+    correct_option: b
+    explanation: "`M` means powers of 1000 and `Mi` means powers of 1024."
+
+  - id: ats023-030-q04
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Trace the path of a usage number"
+    source_readings:
+      - sections/section-030/module-02/course-01-how-usage-numbers-reach-kubectl-top.md
+    prompt: |-
+      Which component produces the container CPU and memory counters that metrics-server reads?
+    options:
+      - id: a
+        text: "The scheduler, from the Pod specifications."
+        explanation: "The scheduler does not measure usage."
+      - id: b
+        text: "The API server, from the etcd store."
+        explanation: "The API server stores objects and does not hold usage counters."
+      - id: c
+        text: "The controller manager, from the Deployment status."
+        explanation: "Controllers write status fields that do not include usage."
+      - id: d
+        text: "The kubelet on each node, through cAdvisor, at `/metrics/resource`."
+        explanation: "Correct. The kubelet reads container counters from the kernel and serves them for metrics-server to scrape."
+    correct_option: d
+    explanation: "The kubelet reads container counters from the kernel and serves them for metrics-server to scrape."
+
+  - id: ats023-030-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read the APIService condition"
+    source_readings:
+      - sections/section-030/module-02/course-02-reading-the-metrics-api-and-its-consumers.md
+    prompt: |-
+      `kubectl top nodes` fails. The APIService `v1beta1.metrics.k8s.io` has `Available` set to `False` with reason `MissingEndpoints`. What does that reason mean?
+    options:
+      - id: a
+        text: "The Service in front of metrics-server has no ready Pod behind it."
+        explanation: "Correct. The API server found the Service but no ready endpoints."
+      - id: b
+        text: "Your user lacks permission to read node metrics."
+        explanation: "A permission problem produces a `Forbidden` error, not this reason."
+      - id: c
+        text: "The kubelet certificate is not trusted."
+        explanation: "That would appear in the metrics-server logs while the Pod is running."
+      - id: d
+        text: "The metrics-server image cannot be pulled."
+        explanation: "That would leave the Pod in an image pull state, but the reason names missing endpoints, not the cause."
+    correct_option: a
+    explanation: "The API server found the Service but no ready endpoints."
+
+  - id: ats023-030-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Query the Metrics API directly"
+    source_readings:
+      - sections/section-030/module-02/course-02-reading-the-metrics-api-and-its-consumers.md
+    prompt: |-
+      You want to prove that metrics reach the API server without using the formatting of `kubectl top`. Which command does that?
+    options:
+      - id: a
+        text: "`kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes`"
+        explanation: "Correct. It sends a GET to the Metrics API path and prints the raw `NodeMetricsList`."
+      - id: b
+        text: "`kubectl get nodes.metrics`"
+        explanation: "This is not a valid resource name without the group."
+      - id: c
+        text: "`kubectl describe apiservice nodes`"
+        explanation: "There is no such APIService."
+      - id: d
+        text: "`kubectl logs deployment/metrics-server --raw`"
+        explanation: "The logs command has no `--raw` option for the Metrics API."
+    correct_option: a
+    explanation: "It sends a GET to the Metrics API path and prints the raw `NodeMetricsList`."
+
+  - id: ats023-030-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain the autoscaler dependency"
+    source_readings:
+      - sections/section-030/module-02/course-02-reading-the-metrics-api-and-its-consumers.md
+    prompt: |-
+      A HorizontalPodAutoscaler for `probe` shows `<unknown>` for its CPU value and does not scale. The `probe` Pods run normally. Which cause fits?
+    options:
+      - id: a
+        text: "The `probe` image is too large."
+        explanation: "Image size does not affect the metric value."
+      - id: b
+        text: "The Metrics API is unavailable because metrics-server is not serving."
+        explanation: "Correct. The autoscaler reads Pod usage from the Metrics API, so it cannot compute a value without it."
+      - id: c
+        text: "The Deployment has two replicas, which is too few for autoscaling."
+        explanation: "The autoscaler can work with any replica count within its bounds."
+      - id: d
+        text: "The Service of `probe` has no selector."
+        explanation: "The Service is not used by the autoscaler to read metrics."
+    correct_option: b
+    explanation: "The autoscaler reads Pod usage from the Metrics API, so it cannot compute a value without it."
+
+  - id: ats023-030-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Select the repair for a kubelet certificate error in a test cluster"
+    source_readings:
+      - sections/section-030/module-02/course-03-diagnosing-and-repairing-a-broken-metrics-server.md
+    prompt: |-
+      In a kind cluster the metrics-server logs repeat an error about a certificate signed by an unknown authority for every node. Which change repairs it with the smallest edit and keeps the Deployment?
+    options:
+      - id: a
+        text: "Delete the Deployment and let it be recreated."
+        explanation: "A deleted Deployment is not recreated by anything unless a manifest is applied, and the arguments stay the same."
+      - id: b
+        text: "Scale metrics-server to three replicas."
+        explanation: "More replicas repeat the same failing scrape."
+      - id: c
+        text: "Remove the APIService so the API server stops checking."
+        explanation: "This removes the Metrics API."
+      - id: d
+        text: "Add `--kubelet-insecure-tls` to the container arguments with a patch."
+        explanation: "Correct. The flag makes metrics-server skip verification of the self-signed kubelet certificate. It is suitable for a test cluster only."
+    correct_option: d
+    explanation: "The flag makes metrics-server skip verification of the self-signed kubelet certificate. It is suitable for a test cluster only."
+
+  - id: ats023-030-q09
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Classify a Pod by Quality of Service"
+    source_readings:
+      - sections/section-030/module-03/course-01-qos-classes-and-how-limits-are-enforced.md
+    prompt: |-
+      A Pod has two containers. The first has equal CPU and memory requests and limits. The second has only a memory request. What is its class?
+    options:
+      - id: a
+        text: "`Guaranteed`"
+        explanation: "Every container must have both CPU and memory limits and requests that match."
+      - id: b
+        text: "`BestEffort`"
+        explanation: "The Pod has requests, so it is not `BestEffort`."
+      - id: c
+        text: "`Burstable`"
+        explanation: "Correct. At least one container has a setting and the Pod does not meet the `Guaranteed` rules."
+      - id: d
+        text: "`Critical`"
+        explanation: "There is no such class."
+    correct_option: c
+    explanation: "At least one container has a setting and the Pod does not meet the `Guaranteed` rules."
+
+  - id: ats023-030-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Tell CPU throttling from memory kills"
+    source_readings:
+      - sections/section-030/module-03/course-01-qos-classes-and-how-limits-are-enforced.md
+    prompt: |-
+      A container's usage in `kubectl top` sits at exactly its CPU limit and its latency is high. It has no restarts. What explains it?
+    options:
+      - id: a
+        text: "The kernel throttles the container once it uses its CPU quota in each period."
+        explanation: "Correct. CPU is compressible, so the container is paused, not killed, and no event appears."
+      - id: b
+        text: "The kernel stopped the container for an out-of-memory condition."
+        explanation: "That would show restarts and `OOMKilled`."
+      - id: c
+        text: "The scheduler evicted the container."
+        explanation: "Eviction removes the Pod and shows in its status."
+      - id: d
+        text: "The memory request is too low."
+        explanation: "A memory request does not affect CPU speed."
+    correct_option: a
+    explanation: "CPU is compressible, so the container is paused, not killed, and no event appears."
+
+  - id: ats023-030-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Prove an OOM kill"
+    source_readings:
+      - sections/section-030/module-03/course-02-diagnosing-oomkilled-and-node-capacity.md
+    prompt: |-
+      A Pod is in `CrashLoopBackOff`. Which field shows whether the previous run was an out-of-memory kill?
+    options:
+      - id: a
+        text: "`status.phase`"
+        explanation: "The phase is `Running` or `Pending` and does not carry the reason."
+      - id: b
+        text: "`spec.restartPolicy`"
+        explanation: "This is configuration, not evidence of what happened."
+      - id: c
+        text: "`status.containerStatuses[].lastState.terminated.reason`"
+        explanation: "Correct. The reason `OOMKilled` with exit code 137 proves it. `CrashLoopBackOff` only describes the wait between restarts."
+      - id: d
+        text: "`metadata.generation`"
+        explanation: "This counts changes to the spec."
+    correct_option: c
+    explanation: "The reason `OOMKilled` with exit code 137 proves it. `CrashLoopBackOff` only describes the wait between restarts."
+
+  - id: ats023-030-q12
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Decide between a higher limit and a code fix"
+    source_readings:
+      - sections/section-030/module-03/course-02-diagnosing-oomkilled-and-node-capacity.md
+    prompt: |-
+      A `scout` container is `OOMKilled`. `kubectl top` shows its memory rising steadily from start-up until each kill, whatever the limit. Doubling the limit made each run twice as long. What is the best conclusion?
+    options:
+      - id: a
+        text: "The limit is too low for normal use, so raise it once more."
+        explanation: "Steady growth until any limit means more limit only delays the kill."
+      - id: b
+        text: "The application grows without bound, so fix the application. A higher limit only postpones the kill."
+        explanation: "Correct. Run length that scales with the limit points to a leak."
+      - id: c
+        text: "The node has too little memory, so add a node."
+        explanation: "The kill comes from the container limit, not from node pressure."
+      - id: d
+        text: "Remove the memory limit so the container is never killed."
+        explanation: "This risks the whole node and moves the failure to node eviction."
+    correct_option: b
+    explanation: "Run length that scales with the limit points to a leak."
+
+  - id: ats023-030-q13
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain a quota rejection of a Deployment"
+    source_readings:
+      - sections/section-030/module-03/course-03-resourcequota-limitrange-and-admission.md
+    prompt: |-
+      A `drifter` Deployment in `outpost` shows `0/2` ready and `kubectl get pods` lists no Pods. The namespace has a ResourceQuota on memory requests and limits and no LimitRange. Where is the cause visible?
+    options:
+      - id: a
+        text: "In the logs of the `drifter` container."
+        explanation: "No container exists, so there are no logs."
+      - id: b
+        text: "In the scheduler events of a `Pending` Pod."
+        explanation: "No Pod was created, so the scheduler never saw it."
+      - id: c
+        text: "In the events of the ReplicaSet, as a `FailedCreate` message about the quota."
+        explanation: "Correct. The API server rejects the Pod at creation, and the ReplicaSet controller records the error."
+      - id: d
+        text: "In the node conditions."
+        explanation: "The nodes are not involved in a creation-time rejection."
+    correct_option: c
+    explanation: "The API server rejects the Pod at creation, and the ReplicaSet controller records the error."
+
+  - id: ats023-030-q14
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Fix a quota rejection without removing policy"
+    source_readings:
+      - sections/section-030/module-03/course-03-resourcequota-limitrange-and-admission.md
+    prompt: |-
+      The same `drifter` Pods must run. The team may not delete the quota. Which fix keeps the quota and fixes every workload in the namespace that omits resources?
+    options:
+      - id: a
+        text: "Add a LimitRange with `default` and `defaultRequest` memory values, then restart the Deployment."
+        explanation: "Correct. The LimitRanger plugin fills the values before the quota check, and a restart makes the ReplicaSet retry at once."
+      - id: b
+        text: "Delete the ResourceQuota."
+        explanation: "This removes the policy."
+      - id: c
+        text: "Increase the Deployment replicas."
+        explanation: "More Pods hit the same rejection."
+      - id: d
+        text: "Taint the node so the Pods avoid it."
+        explanation: "The rejection happens before scheduling."
+    correct_option: a
+    explanation: "The LimitRanger plugin fills the values before the quota check, and a restart makes the ReplicaSet retry at once."

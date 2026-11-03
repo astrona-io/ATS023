@@ -1,0 +1,52 @@
+# Find Evidence In Node-Level Logs And Fix A Kubelet-Visible Fault (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-040-03-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+bootstrap:
+  init:
+  - name: seed-lab
+    description: Create the logger Pod on the worker and the Deployment with a bad image tag
+    type: file
+    source: bootstrap/setup.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: node-log-evidence
+    description: The token and the node log file path are recorded
+    type: file
+    source: validation/validate-node-log-evidence.sh
+    hint: The container log file is under /var/log/pods on the worker node. Open a shell on the node container with podman exec.
+  - name: kubelet-evidence
+    description: The failed image reference from the kubelet journal is recorded
+    type: file
+    source: validation/validate-kubelet-evidence.sh
+    hint: Run journalctl -u kubelet on the worker node and search for the pull error of relay.
+  - name: relay-running
+    description: Deployment relay is Available
+    type: file
+    source: validation/validate-relay-running.sh
+    hint: The image tag does not exist. Use the tag busybox:1.37.0.
+  - name: no-shortcut
+    description: The kubelet, the logger Pod and the relay command are intact
+    type: file
+    source: validation/validate-no-shortcut.sh
+    hint: Do not stop the kubelet, delete the logger Pod or change the relay command.
+teardown:
+  keepCluster: false

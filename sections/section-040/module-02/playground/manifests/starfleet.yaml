@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+# Two replicas with the same label: used to read several Pods with -l.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: scout
+  template:
+    metadata:
+      labels:
+        app: scout
+    spec:
+      containers:
+      - name: scout
+        image: docker.io/library/busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - 'while true; do echo "scout heartbeat from $(hostname)"; sleep 5; done'
+---
+# Sidecar log-streaming pattern: the app writes a file, the sidecar prints it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bridge
+  namespace: starfleet
+  labels:
+    app: bridge
+spec:
+  containers:
+  - name: app
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "app started: writing events to /var/log/app/events.log"; n=0; while true; do n=$((n+1)); echo "event $n" >> /var/log/app/events.log; sleep 5; done'
+    volumeMounts:
+    - name: applog
+      mountPath: /var/log/app
+  - name: log-streamer
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'touch /var/log/app/events.log; tail -n+1 -F /var/log/app/events.log'
+    volumeMounts:
+    - name: applog
+      mountPath: /var/log/app
+      readOnly: true
+  volumes:
+  - name: applog
+    emptyDir: {}
+---
+# Two long-running containers with different jobs and different log content.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe
+  namespace: starfleet
+  labels:
+    app: probe
+spec:
+  containers:
+  - name: api
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'while true; do echo "api: request served"; sleep 5; done'
+  - name: worker
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "worker: started"; echo "worker: ERROR code=E-4417 backend unreachable" >&2; sleep 3600'
+---
+# Init container runs first and finishes; then the main container starts.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shuttle
+  namespace: starfleet
+  labels:
+    app: shuttle
+spec:
+  initContainers:
+  - name: prepare
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "prepare: writing ready marker"; touch /work/ready; echo "prepare: done"'
+    volumeMounts:
+    - name: work
+      mountPath: /work
+  containers:
+  - name: main
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'test -f /work/ready && echo "main: ready marker found"; sleep 3600'
+    volumeMounts:
+    - name: work
+      mountPath: /work
+  volumes:
+  - name: work
+    emptyDir: {}

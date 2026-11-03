@@ -1,0 +1,62 @@
+# Output Streams And Runtime Evidence Capstone (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-capstone-040
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+bootstrap:
+  init:
+  - name: seed-capstone
+    description: Create the evidence Pods and the two faulty Deployments
+    type: file
+    source: bootstrap/setup.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: report-exit-code
+    description: The exit code of the restarting container is recorded
+    type: file
+    source: validation/validate-report-exit-code.sh
+    hint: The last terminated state of the container status holds the exit code.
+  - name: report-worker-error
+    description: The error code from the failing container is recorded
+    type: file
+    source: validation/validate-report-worker-error.sh
+    hint: Read each container of the Pod with kubectl logs -c.
+  - name: report-node-log-file
+    description: The node log file of the logger Pod is recorded
+    type: file
+    source: validation/validate-report-node-log-file.sh
+    hint: Container log files are under /var/log/pods on the node that runs the Pod.
+  - name: shuttle-init-fixed
+    description: shuttle is Available
+    type: file
+    source: validation/validate-shuttle-init-fixed.sh
+    hint: Read the init container log, then change the input that the init container reads.
+  - name: relay-image-fixed
+    description: relay is Available
+    type: file
+    source: validation/validate-relay-image-fixed.sh
+    hint: The kubelet journal on the node names the image it could not pull.
+  - name: no-shortcut
+    description: Evidence, checks and the kubelet are intact
+    type: file
+    source: validation/validate-no-shortcut.sh
+    hint: Do not delete the evidence Pods, remove the init check or stop the kubelet.
+teardown:
+  keepCluster: false

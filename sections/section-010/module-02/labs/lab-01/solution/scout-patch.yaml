@@ -1,0 +1,15 @@
+spec:
+  template:
+    spec:
+      nodeSelector:
+        pool: survey
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: survey
+        effect: NoSchedule
+      containers:
+      - name: scout
+        resources:
+          requests:
+            cpu: 100m

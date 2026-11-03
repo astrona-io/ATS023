@@ -5,74 +5,92 @@ exam_objectives:
 ---
 # Expressing Resource Needs For Every Container
 
-The main process requests little memory, but its supporting container buffers a large amount of data. Scheduling and resource enforcement need the complete workload. A familiar request-to-limit ratio cannot replace that accounting.
+A Pod can have a main container that requests little memory and a helper container that buffers a large amount of data. The scheduler and the kubelet both work with the complete Pod, not with the container the author remembers best. This chapter shows how requests and limits are written, which component uses each one, and how to read them from a running Pod.
 
 ## Learning objectives
 
-- Compare specification, status, events and metrics.
-- Confirm observation context and permissions.
 - Distinguish measured usage from allocation and enforcement.
+- Read the units for CPU and memory correctly.
+- Account for every container when you reason about placement.
 
 ## Before you start
 
-This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+A resource request is the amount of CPU or memory a container asks for. A resource limit is the maximum the container may use. The `probe` Deployment in the playground sets `requests.cpu: 10m`, `requests.memory: 32Mi` and `limits.memory: 128Mi`. It sets no CPU limit. Keep those values in mind, because the commands below read them back.
 
-## Responsible components and behavior
+## Units for CPU and memory
 
-A resource request declares capacity used in Kubernetes scheduling and related allocation behavior. A resource limit constrains allowed usage according to the resource and runtime. Application developers must express the needs of the complete Pod, including supporting containers, rather than assigning one memorable value to every workload.
+CPU is measured in CPU units. One unit is one core. A suffix `m` means millicores, so `10m` is one hundredth of a core and `500m` is half a core. Memory is measured in bytes. The suffixes `Mi` and `Gi` are binary (powers of 1024), and `M` and `G` are decimal (powers of 1000). `128Mi` is 134217728 bytes, while `128M` is 128000000 bytes. Mixing them changes the value by about five percent. A trailing `m` on a memory value means thousandths of a byte, which is almost always a mistake.
 
-## Understand CPU And Memory Units
+## Who uses the request and who uses the limit
 
-CPU means central processing unit. Kubernetes CPU quantities express compute capacity, with millicpu representing thousandths of a CPU unit. Memory quantities express bytes with decimal or binary suffix conventions. Confusing `M` with `Mi`, or using a suffix intended for fractional CPU on memory, can create a drastically different requirement from the author's intention.
+The scheduler is the control plane component that picks a node for each new Pod. It adds up the requests of the Pod and compares the sum with what is left of each node's allocatable capacity. It does not look at live usage. A Pod whose request does not fit any node stays `Pending` with a `FailedScheduling` event, even if every node is nearly idle.
 
-A request is not a measurement of current usage. A process using little CPU during one observation can still have a large declared request, and scheduling considers the declared capacity against the node's available allocation. Conversely, a very small request does not prove that the application can safely operate with little memory.
+The kubelet and the container runtime enforce limits on the node. The kubelet translates a CPU request into a relative CPU weight, so under contention each container gets time in proportion to its request. A CPU limit becomes a hard cap that the Linux kernel enforces by pausing the container for part of each scheduling period. That pause is called throttling. A memory limit becomes a hard ceiling. When the container goes above it, the kernel kills a process in the container, and the container shows `OOMKilled`.
 
-Limits also differ by resource. CPU usage can be throttled when the allowed runtime allocation is exhausted. A memory limit can result in an out-of-memory termination when the container exceeds its allowed memory. These are different failure mechanisms and require different application sizing and diagnostic evidence.
+<!-- astrona:playground:renew -->
 
-## Include The Whole Workload
+```sh
+kubectl -n starfleet get pod -l app=probe -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{.spec.containers[0].resources}{"\n"}{end}'
+kubectl describe node | grep -A8 "Allocated resources"
+```
 
-Ordinary simultaneously running application containers contribute their requests to Pod placement. Init-container resource accounting has special rules because regular initialization runs sequentially before ordinary application containers. Restartable init sidecars complicate that simple sequential model because they continue running beside later containers.
+The first command prints the resources of each `probe` Pod as stored in the API server. The second command, run against a cluster with one node, prints the node's total requests and limits as a share of its capacity. The `Allocated resources` block counts requests and limits, not usage.
 
-For a `scout` application with a helper, scheduling cannot be reasoned about only from the main container's request. The helper consumes capacity too, and configured Pod overhead or supported Pod-level resource settings can affect the effective contract. Use the applicable cluster version and workload representation when calculating exact totals.
+## Count every container
 
-A container with missing settings can receive defaults from a namespace LimitRange. A ResourceQuota can constrain namespace totals and required resource declarations. The effective admitted Pod can therefore differ from a source file containing no explicit request. Examine defaults and admission behavior before assuming omitted fields mean zero allocation.
+The scheduler sums the requests of all regular containers in a Pod. If the helper container requests `256Mi` and the main container requests `32Mi`, the Pod needs `288Mi`. Init containers run one after another before the regular containers, so the Pod's effective request is the larger of two numbers: the sum of the regular containers, or the largest single init container request. A restartable init container, which is an init container with `restartPolicy: Always` that keeps running as a sidecar, adds to the running total instead.
 
-## Scheduling Failure And Runtime Failure
+Defaults can change the real value. A LimitRange is a namespace object that sets default requests and limits for containers that omit them. A ResourceQuota caps the total requests and limits in a namespace. Both act when the Pod is created, so the stored Pod can differ from the Deployment template.
 
-A Pod that cannot fit its requests can remain Pending even if live usage on a node looks low. The scheduler's capacity decisions account for declared allocations and applicable placement constraints. Reducing a request to force placement can lead to poor runtime behavior if the new value no longer represents realistic needs.
+```sh
+kubectl -n starfleet get pod -l app=probe -o yaml | grep -A12 "resources:"
+```
 
-A running process terminated for memory pressure needs a different investigation. Compare termination reason, limit, measured usage and application behavior over time. A higher request can influence placement without necessarily raising the container's memory limit. Raising only the request does not automatically remove the termination threshold.
+Read the stored Pod, not only the template. If a LimitRange had filled in a default, only the stored Pod would show it.
 
-A namespace quota rejection happens during API admission for the relevant object creation or update. It is not a scheduler decision after a Pod was accepted. Distinguish a rejected request from an accepted Pending Pod, because changing node capacity cannot directly fix every quota policy violation.
+## A worked example with numbers
 
-## Select Requirements Deliberately
+Take a `scout` Pod with two regular containers. The `app` container requests `100m` CPU and `64Mi` memory. The `buffer` container requests `50m` CPU and `256Mi` memory. The Pod request is `150m` CPU and `320Mi` memory. A node with `300Mi` of allocatable memory left cannot take this Pod, even though the `app` container alone would fit.
 
-Use expected steady use, initialization behavior and meaningful peaks to form a sizing decision. A workload processing large reports may need more temporary memory than its idle observation suggests. A helper that buffers records can also grow when its external destination is slow.
+Now add an init container that requests `500Mi` and runs for ten seconds. The effective memory request becomes `500Mi`, because the init container runs alone and its request is larger than the regular sum of `320Mi`. The scheduler uses the larger value. After the init container ends, the Pod still holds the scheduled slot, but the kubelet only enforces the limits of the running containers.
 
-Limits should reflect intended protection and application tolerance. A restrictive CPU limit can increase response time through throttling, while no limit can leave shared capacity exposed to high demand. The correct choice depends on the workload and platform policy rather than a universal ratio between request and limit.
+## Placement failure and runtime failure
 
-After expressing requirements, review the complete admitted workload and its observed scheduling and execution. Resource definitions are part of an application contract, not a guarantee that every future input fits. Preserve a distinction among allocation, enforcement, defaults and namespace policy when explaining a failure.
-
-## Work through the decision
-
-For ordinary containers running together, resource demand includes each container's requests. Regular sequential init containers use different accounting from simultaneous application containers, and restartable init sidecars add ongoing demand. Pod overhead and version-supported Pod resource settings can further affect the effective requirement.
-
-Inspect the admitted Pod as well as the Deployment template. Namespace defaults can fill omitted values when Pods are created. That makes a short source definition insufficient evidence for exact scheduling demand. Central processing unit (CPU) and memory also fail differently: CPU limits can throttle execution, while memory exhaustion can terminate a process. Raising one resource does not solve the other's failure.
+These two failures look similar in `kubectl get pods` but they come from different components. A Pod that is `Pending` was never placed, and the cause is in the scheduler's `FailedScheduling` event. A Pod that is `Running` and then restarts was placed correctly and then enforced. Its cause is in `lastState.terminated.reason`, for example `OOMKilled` with exit code `137`, which is 128 plus signal 9.
 
 ```mermaid
 flowchart TB
-    C["Container requirements"] --> P["Effective Pod demand"]
-    I["Init and sidecar semantics"] --> P
-    D["Admitted defaults and overhead"] --> P
-    P --> S["Scheduling feasibility"]
-    C --> R["Runtime limits"]
+    R["Requests"] --> S["Scheduler"]
+    S -->|"fits"| N["Node"]
+    S -->|"does not fit"| P["Pending"]
+    L["Limits"] --> K["Kubelet and kernel"]
+    N --> K
+    K -->|"CPU over limit"| T["Throttled"]
+    K -->|"memory over limit"| O["OOMKilled"]
 ```
 
-Effective scheduling demand and runtime limits are related declarations with different jobs.
+Requests feed the placement decision, and limits feed runtime enforcement on the node that was chosen.
 
-You can now account for the actual admitted workload and classify a resource failure. A justified size preserves application requirements rather than merely making a Pending status disappear.
+Raising only a request can make a Pod harder to place and leaves its memory ceiling unchanged. Raising only a limit lifts the ceiling and does not reserve any capacity, so the node can still run out of memory when several containers grow together.
+
+## Changing a value
+
+`kubectl set resources` edits the requests and limits of a Deployment's containers in one command. The change edits the Pod template, so the Deployment controller starts a rollout and replaces the Pods. The running Pods do not change in place.
+
+```sh
+kubectl -n starfleet set resources deployment/probe --requests=cpu=20m
+kubectl -n starfleet rollout status deployment/probe
+```
+
+After the rollout, read the new Pods again with the first command of this chapter. The old Pods are gone, and the new ones carry the new request. Return the value to `10m` afterwards if you want the playground to match the text of the other chapters.
+
+## Choosing values
+
+Base a request on the steady usage you measure with `kubectl top`, plus the start-up peak. Base a memory limit on the highest usage you accept before the container should be killed. A CPU limit that is too tight slows the application without any error message. Many platform teams therefore set a CPU request and no CPU limit, and set a memory limit equal to or above the memory request.
+
+You can now read the units, say which component uses each field and calculate the effective request of a Pod with several containers. The next question is how to prove a measurement with the metrics API directly.
 
 ## Common pitfalls
 
 > [!WARNING]
-> Requests, limits, usage and quotas answer different questions. Account for all running containers, correct units and admitted defaults, then distinguish placement failure from resource enforcement during execution.
+> `M` and `Mi` are different sizes, and a request is not a measurement. Count every container, including init and sidecar containers. Compare the stored Pod with the Deployment template, because a LimitRange can add values. Raising a request does not raise the memory limit.

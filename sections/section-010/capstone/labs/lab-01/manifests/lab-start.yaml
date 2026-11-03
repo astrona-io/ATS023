@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: probe-config
+  namespace: starfleet
+data:
+  level: high
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: scout
+  template:
+    metadata:
+      labels:
+        app: scout
+    spec:
+      nodeSelector:
+        pool: survey-east
+      containers:
+      - name: scout
+        image: docker.io/library/busybox:1.37.0
+        command: ["sh", "-c", "sleep 3600"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: probe
+  template:
+    metadata:
+      labels:
+        app: probe
+    spec:
+      nodeSelector:
+        pool: survey
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: survey
+        effect: NoSchedule
+      containers:
+      - name: probe
+        image: docker.io/library/busybox:1.37.99
+        command: ["sh", "-c", "echo level=$LEVEL; sleep 3600"]
+        env:
+        - name: LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: probe-config
+              key: mode
+        resources:
+          requests:
+            cpu: 50m
+            memory: 16Mi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: probe

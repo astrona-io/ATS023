@@ -1,0 +1,60 @@
+# Repair metrics-server (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-030-02-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    addons:
+      metricsServer: true
+
+# Starting state: the probe Deployment and a metrics-server whose argument
+# --kubelet-insecure-tls was removed, so it cannot scrape the kubelets.
+bootstrap:
+  init:
+  - name: seed-fault
+    description: Create the workload and break the metrics-server arguments
+    type: file
+    source: bootstrap/01-seed-fault.sh
+
+# Applied only by astrona test: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Add the missing argument to metrics-server
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: top-nodes-works
+    description: kubectl top nodes returns data
+    type: file
+    source: validation/validate-top-nodes-works.sh
+    hint: Find out why metrics-server cannot read from the kubelets. Read its logs.
+  - name: apiservice-available
+    description: The metrics APIService is Available
+    type: file
+    source: validation/validate-apiservice-available.sh
+    hint: The APIService becomes Available when the metrics-server Pod is ready.
+  - name: pod-metrics-served
+    description: The Metrics API returns metrics for both probe Pods
+    type: file
+    source: validation/validate-pod-metrics-served.sh
+    hint: Wait one sampling interval after the Pod restarts, then query the namespaced Pod metrics path.
+  - name: metrics-server-intact
+    description: metrics-server was repaired in place with its flag
+    type: file
+    source: validation/validate-metrics-server-intact.sh
+    hint: Patch the existing Deployment. Do not delete it and do not change the image.
+
+teardown:
+  keepCluster: false

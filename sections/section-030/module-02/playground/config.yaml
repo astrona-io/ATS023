@@ -1,0 +1,23 @@
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-playground-030-02
+  docs:
+    guide: docs/overview.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    addons:
+      metricsServer: true
+bootstrap:
+  manifests:
+  - name: workloads
+    type: file
+    source: manifests/workloads.yaml
+  waitFor:
+  - resource: deploy/probe
+    namespace: starfleet
+teardown:
+  keepCluster: false

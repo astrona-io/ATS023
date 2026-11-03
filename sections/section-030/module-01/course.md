@@ -5,7 +5,7 @@ exam_objectives:
 ---
 # Resource Observations And Capacity Diagnosis
 
-This module develops resource Observations And Capacity Diagnosis. It connects the intended application behavior to declared resources and observed conditions.
+This module explains how to tell apart what a workload declares, what the cluster has measured and what the node enforces. It uses the `probe` Deployment in `starfleet` and the Metrics API to capture live evidence.
 
 ## Learning Goals
 
@@ -16,10 +16,12 @@ This module develops resource Observations And Capacity Diagnosis. It connects t
 
 ## Before You Start
 
-Examples describe system behavior. No runtime is required. Read each field or diagnostic name as part of the stated contract.
+You need a terminal with `kubectl` and the `astrona` command-line tool. The module playground is a private kind cluster with metrics-server already installed, so `kubectl top` works after about a minute. Graded exercises use their own separate environments.
 
 ## Reading Order
 
-1. Choosing Diagnostic Evidence With kubectl
-2. Expressing Resource Needs For Every Container
-3. Summary
+The first page shows which `kubectl` command reads which source of evidence and why measured usage is a separate signal. A graded task follows it: capture a live Pod measurement.
+
+The second page covers requests, limits, units and the effective demand of a Pod with several containers. The third page is a guided practice that reads the raw Metrics API and stores a sample. The module ends with a summary.
+
+<!-- astrona:playground -->

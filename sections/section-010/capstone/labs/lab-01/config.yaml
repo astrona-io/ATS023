@@ -1,0 +1,65 @@
+# Troubleshoot Clusters And Nodes Capstone (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-capstone-010
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+# Starting state: the worker kubelet is stopped, the worker carries a label and
+# a taint, scout cannot be scheduled and probe cannot start.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Label and taint the worker, create the workloads, stop the worker kubelet
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: worker-ready-and-rules-kept
+    description: The worker is Ready and schedulable and keeps its label and taint
+    type: file
+    source: validation/validate-worker-ready-and-rules-kept.sh
+    hint: Start the kubelet on the worker node container and wait for Ready. Do not remove the taint or the label and do not cordon the node.
+  - name: scout-placement-rules
+    description: scout has a matching nodeSelector and a toleration for the reserved taint
+    type: file
+    source: validation/validate-scout-placement-rules.sh
+    hint: Read the FailedScheduling event of scout. Correct the selector value and add a toleration. Keep both.
+  - name: scout-running-on-worker
+    description: Both scout replicas are Ready on the worker
+    type: file
+    source: validation/validate-scout-running-on-worker.sh
+    hint: After the node is Ready and the placement rules are right, wait for the rollout.
+  - name: probe-image-and-reference
+    description: probe uses busybox 1.37.0 and reads LEVEL from the ConfigMap key level
+    type: file
+    source: validation/validate-probe-image-and-reference.sh
+    hint: There are two faults, an image tag and a ConfigMap key. Fix the reference in the Deployment, not the ConfigMap.
+  - name: probe-running-and-reads-level
+    description: Both probe replicas are Ready and a Pod prints LEVEL=high
+    type: file
+    source: validation/validate-probe-running-and-reads-level.sh
+    hint: Wait for the rollout and run printenv LEVEL inside a probe Pod.
+  - name: protections-kept
+    description: The ConfigMap and the PodDisruptionBudget of probe are untouched
+    type: file
+    source: validation/validate-protections-kept.sh
+    hint: Do not edit probe-config and do not delete the PodDisruptionBudget probe.
+teardown:
+  keepCluster: false

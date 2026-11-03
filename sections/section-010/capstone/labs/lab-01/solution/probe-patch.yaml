@@ -1,0 +1,12 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: probe
+        image: docker.io/library/busybox:1.37.0
+        env:
+        - name: LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: probe-config
+              key: level

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: node-recovery
+  namespace: starfleet
+data:
+  component: kubelet
+  node: astro-ats-023-playground-010-01-worker
+  result: ready

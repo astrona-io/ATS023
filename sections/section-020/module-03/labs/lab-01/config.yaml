@@ -1,0 +1,66 @@
+# Repair A Broken kube-scheduler Static Pod (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-020-03-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/python:3.13-alpine
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+
+# Starting state: the scheduler manifest names a kubeconfig file that does not
+# exist, so the scheduler crashes and the scout Pods stay Pending without events.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads, break the scheduler manifest and create the scout Deployment
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Repair the scheduler manifest
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: scheduler-flag-restored
+    description: The scheduler manifest uses the real kubeconfig and the manifest directory is clean
+    type: file
+    source: validation/validate-scheduler-flag-restored.sh
+    hint: Read the scheduler log, list the files in /etc/kubernetes, and fix only the --kubeconfig flag. Keep --leader-elect=true.
+  - name: scheduler-running
+    description: The scheduler Pod is Ready and its container runs
+    type: file
+    source: validation/validate-scheduler-running.sh
+    hint: The kubelet rescans the manifest directory every 20 seconds. Check kubectl -n kube-system get pods.
+  - name: lease-renewing
+    description: The kube-scheduler Lease has a holder and renews
+    type: file
+    source: validation/validate-lease-renewing.sh
+    hint: Read the Lease twice and compare renewTime. Wait for the scheduler to win the election.
+  - name: scout-scheduled
+    description: scout has two available replicas placed by the scheduler
+    type: file
+    source: validation/validate-scout-scheduled.sh
+    hint: Do not set nodeName in the Deployment and do not bind Pods by hand. Fix the scheduler instead.
+  - name: new-pod-scheduled
+    description: A fresh Pod gets a node
+    type: file
+    source: validation/validate-new-pod-scheduled.sh
+    hint: A working scheduler assigns a node to every new Pod within seconds.
+
+teardown:
+  keepCluster: false

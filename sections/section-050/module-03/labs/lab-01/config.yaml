@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Repair A Service Port And A Deny Policy (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-050-03-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+      - docker.io/library/python:3.13-alpine
+      - docker.io/library/busybox:1.37.0
+
+# Starting state: the probe Service forwards to port 9090 while the containers
+# listen on 8080, and a default-deny ingress policy blocks every client.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Create the workloads, the faulty Service and the deny policy
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: service-endpoints
+      description: probe has two ready endpoints on port 8080
+      type: file
+      source: validation/validate-service-endpoints.sh
+      hint: Compare the Service targetPort with the containerPort of the probe pods. The EndpointSlice shows the port the Service forwards to.
+    - name: shuttle-reaches-probe
+      description: shuttle receives an answer from http://probe/
+      type: file
+      source: validation/validate-shuttle-reaches-probe.sh
+      hint: Two faults sit on this path. Fix the Service port first, then look at NetworkPolicy objects in starfleet.
+    - name: allow-policy
+      description: A NetworkPolicy allows shuttle to reach probe on TCP 8080
+      type: file
+      source: validation/validate-allow-policy.sh
+      hint: Add a policy that selects app=probe, allows ingress from pods with app=shuttle, on the pod port 8080. Policies only add allow rules.
+    - name: isolation-kept
+      description: probe is still isolated and no rule allows every source
+      type: file
+      source: validation/validate-isolation-kept.sh
+      hint: Do not delete the default-deny policy and do not allow all pods, all namespaces or 0.0.0.0/0.
+    - name: workloads-unchanged
+      description: The workloads and the Service shape are unchanged
+      type: file
+      source: validation/validate-workloads-unchanged.sh
+      hint: Keep probe at two replicas and the Service a ClusterIP Service on port 80. Change the target port only.
+
+teardown:
+  keepCluster: false

@@ -1,0 +1,73 @@
+# Section capstone: metrics, OOM kill, quota rejection and a usage report. Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-capstone-030
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/python:3.13-alpine
+    - docker.io/library/busybox:1.37.0
+    addons:
+      metricsServer: true
+
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads, quotas and the faults
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+
+validation:
+  scripts:
+  - name: top-nodes-works
+    description: kubectl top nodes returns data
+    type: file
+    source: validation/validate-top-nodes-works.sh
+    hint: Find out why metrics-server cannot read from the kubelets.
+  - name: metrics-server-intact
+    description: metrics-server was repaired in place
+    type: file
+    source: validation/validate-metrics-server-intact.sh
+    hint: Patch the existing Deployment. Do not delete it.
+  - name: scout-not-oomkilled
+    description: scout runs two ready replicas with a fitting limit
+    type: file
+    source: validation/validate-scout-not-oomkilled.sh
+    hint: Read the previous container state, then check the quota and the LimitRange maximum.
+  - name: starfleet-quota-and-probe-intact
+    description: The starfleet quota still limits memory and probe is unchanged
+    type: file
+    source: validation/validate-starfleet-quota-and-probe-intact.sh
+    hint: Change a quota value. Do not delete the quota.
+  - name: drifter-admitted
+    description: drifter runs two ready replicas with memory values
+    type: file
+    source: validation/validate-drifter-admitted.sh
+    hint: Read the ReplicaSet events in outpost.
+  - name: outpost-quota-intact
+    description: The outpost quota still limits memory and Pods
+    type: file
+    source: validation/validate-outpost-quota-intact.sh
+    hint: Add defaults or set resources. Do not delete the quota.
+  - name: usage-report
+    description: usage-report holds a recent PodMetricsList for probe and scout
+    type: file
+    source: validation/validate-usage-report.sh
+    hint: Query the namespaced Pod metrics path after metrics work, and store the response in the ConfigMap.
+
+teardown:
+  keepCluster: false

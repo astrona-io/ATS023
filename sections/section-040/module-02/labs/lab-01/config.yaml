@@ -1,0 +1,45 @@
+# Collect A Container Error And Fix An Init Container (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-040-02-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-lab
+    description: Create the evidence Pod and the failing Deployment
+    type: file
+    source: bootstrap/setup.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: error-report
+    description: error-report records the failing container and its error code
+    type: file
+    source: validation/validate-error-report.sh
+    hint: Read each container of Pod bridge with kubectl logs -c. Only one of them logs an ERROR line with a code.
+  - name: init-container-fixed
+    description: shuttle is Available and its init container finished
+    type: file
+    source: validation/validate-init-container-fixed.sh
+    hint: Read the init container log with kubectl logs -c fetch-config and change the setting it complains about.
+  - name: no-shortcut
+    description: The init container and the evidence Pod are intact
+    type: file
+    source: validation/validate-no-shortcut.sh
+    hint: Keep the init container and its check. Change the input it reads, not the check.
+teardown:
+  keepCluster: false

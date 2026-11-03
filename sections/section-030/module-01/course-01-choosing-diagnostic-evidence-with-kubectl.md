@@ -5,7 +5,7 @@ exam_objectives:
 ---
 # Choosing Diagnostic Evidence With kubectl
 
-The `probe` Deployment requests two replicas, its status reports current availability, and metrics report recent resource usage. These are three different observations. Choosing the right one makes a troubleshooting claim precise.
+The `probe` Deployment in `starfleet` asks for two replicas. Its status reports how many replicas are available. The metrics pipeline reports how much CPU and memory those replicas used a few seconds ago. These are three different observations, and a troubleshooting claim is only as precise as the observation behind it.
 
 ## Learning objectives
 
@@ -15,67 +15,77 @@ The `probe` Deployment requests two replicas, its status reports current availab
 
 ## Before you start
 
-This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+A Pod is the Kubernetes unit that runs one or more containers. A namespace groups namespaced objects such as Pods and Deployments. The playground for this module is a kind cluster (Kubernetes running in container-engine containers on your machine) with the `probe` Deployment, the `shuttle` Pod in `starfleet` and the `drifter` Pod in `outpost`. It also runs metrics-server, the component that supplies usage numbers.
 
-## Responsible components and behavior
+## Which component answers which question
 
-`kubectl` is the Kubernetes command-line client. It sends requests to the application programming interface (API) server using a selected cluster, identity and namespace context. Its built-in inspection commands expose different kinds of evidence. Choosing the right evidence is part of diagnosis; a large collection of unrelated output can obscure the condition that actually prevents an application from working.
+`kubectl` is the Kubernetes command-line client. It sends every request to the API server, the component that stores and serves cluster objects. The kubeconfig file tells `kubectl` which cluster, which identity and which default namespace to use. The current context is the entry in that file that is selected right now.
 
-## Confirm The Observation Scope
+The same client reads very different data. `kubectl get` returns objects that controllers and the kubelet (the node agent) have written to the API server. `kubectl describe` adds the events related to an object. `kubectl top` does not read the stored objects at all. It asks the Metrics API, which metrics-server serves from numbers it collected from each kubelet.
 
-A kubeconfig file describes access contexts and credentials or credential mechanisms. The current context selects the cluster and related defaults used for a request. An explicit namespace selection or the context's namespace affects namespaced resource queries. Looking at the wrong context can produce a convincing description of the wrong application.
+Start every investigation by proving where you are. The first command below prints the context and the second lists the two example namespaces. If the context name is not the playground, stop and fix that first, because correct output from the wrong cluster is still the wrong evidence.
 
-Resource names are also scoped. A Pod named `scout` in one namespace is not the same object as a Pod with that name elsewhere. Labels can select a group of resources, but the meaning of that group depends on the actual label values and resource types queried. A label selector does not itself establish controller ownership.
+<!-- astrona:playground:renew -->
 
-Permissions constrain observations. A forbidden response means the current identity cannot perform the requested action under the relevant authorization decision. It does not establish that the requested resource is absent. A successful discovery request also does not grant access to every discovered resource.
+```sh
+kubectl config current-context
+kubectl get namespace starfleet outpost
+```
 
-## Compare Spec, Status And Events
+A `Forbidden` response means the API server authenticated you but its authorization step denied the verb on that resource. It does not mean the object is missing. A `NotFound` response means the name does not exist in the namespace you asked about, which is often the wrong namespace.
 
-A resource's specification expresses desired state. Its status records controller or system observations for that object. The `get` command can show selected fields or a complete resource representation. A Deployment asking for three replicas can therefore be distinguished from having three available replicas.
+## Specification, status and events
 
-The `describe` command presents a human-readable view of configuration, status and related events. Events can explain scheduling, image preparation and health-check failures. They are time-limited observations rather than an exhaustive permanent audit history, and repeated events may be summarized. Absence of an old event is not proof that its condition never occurred.
+A Deployment has a `spec`, which holds the desired state, and a `status`, which holds what the controller last observed. The `probe` Deployment has `spec.replicas: 2`. Its `status.availableReplicas` is the number of Pods that are ready. When the two numbers differ, the cluster is still converging or something prevents convergence.
 
-Field-specific output helps compare precise properties. JSONPath is a query notation that can select data from the structured response, while JSON is JavaScript Object Notation. Distinguish an empty selected field from a failed request or a query written against the wrong structure. Formatting tools do not change the server's underlying resource semantics.
+```sh
+kubectl -n starfleet get deployment probe -o jsonpath='{.spec.replicas}{" "}{.status.availableReplicas}{"\n"}'
+kubectl -n starfleet describe deployment probe
+```
 
-## Resource Use Is A Separate Signal
+The first command uses JSONPath, a query notation that selects fields from the JSON response. An empty result can mean the field is unset, for example `availableReplicas` is omitted while it is zero, or that the path is wrong. The second command prints conditions and an `Events` section at the end. Events are short records written by controllers and the kubelet. They expire after about an hour by default, so a missing event does not prove that nothing happened.
 
-The `top` command reports resource metrics through an available metrics service. It is not simply another view of Pod specification fields. The cluster must supply the relevant metrics API, and the observer needs access. A failure to obtain metrics can occur while the application itself is running normally.
+## Measured usage is a separate signal
 
-Measured usage, declared requests and configured limits are different quantities. A low current CPU observation does not show that the Pod can be scheduled with a very large request. CPU means central processing unit. A workload can also have brief peaks that are not represented by one measurement snapshot.
+The `kubectl top` command prints CPU in millicores (thousandths of a CPU) and memory as the working set, which is the memory the kernel cannot easily reclaim. The values come from metrics-server. The command with `--containers` splits a Pod into its containers, which matters when a sidecar is the real consumer.
 
-Metrics answer a timing-sensitive question about consumption. Use them alongside requests, limits, restart history and application symptoms. Increasing a memory limit without knowing why a process grows can postpone failure instead of correcting a leak or unsuitable application sizing.
+```sh
+kubectl -n starfleet top pods --containers
+kubectl -n starfleet get pod -l app=probe -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[0].resources}{"\n"}{end}'
+```
 
-## Choose The Next Diagnostic Layer
-
-If a Pod is Pending, status and events about scheduling or dependencies are usually more useful than application logs that do not yet exist. If it is repeatedly restarting, termination state and the previous container instance's logs can explain what happened. If it is Running but unreachable, readiness, Service endpoints, ports and network controls need attention.
-
-The `logs` command retrieves supported container logs, while `exec` starts a process in a running container. They are different subresources and can require different permissions. An image without a shell cannot be inspected through a shell command merely because the Pod exists. A debugging container or copied workload can provide another method where supported and authorized, but it changes the investigation context.
-
-For a report frontend returning errors, begin with the specific failing path and time, identify the affected workload and compare its intended and observed state. Select each next observation to test a hypothesis. This creates an explainable diagnostic sequence instead of treating command familiarity as evidence of the cause.
-
-## Work through the decision
-
-`get` reads structured objects. `describe` combines their fields and related events into a human-readable view. `top` retrieves recent usage through the metrics API rather than reading resource requests from the Pod specification. Each command answers a different question, so collecting them without a hypothesis can still leave the cause unclear.
-
-For example, a Pod can request more memory than any node can allocate while currently using almost none, because it has not started. Low observed usage elsewhere does not make that request schedulable. Conversely, a running Pod can approach its memory limit while its declared request remains small. Metrics need a sampling window and cannot reconstruct every short-lived peak.
+The second command prints the declared requests and limits of each Pod. Put the two outputs side by side. The usage column is a measurement. The request is a number the scheduler uses to pick a node. The limit is a number the kubelet and the container runtime enforce. A low measured value does not make a large request cheap, and a small request does not mean the process stays small.
 
 ```mermaid
 flowchart TB
-    S["Application symptom"] --> D["Desired specification"]
-    S --> O["Observed status"]
-    S --> E["Recent events"]
-    S --> M["Measured usage"]
-    D --> H["Testable diagnosis"]
-    O --> H
-    E --> H
-    M --> H
+    A["Symptom"] --> B["spec: kubectl get"]
+    A --> C["status: kubectl get"]
+    A --> D["events: kubectl describe"]
+    A --> E["usage: kubectl top"]
+    E --> F["Metrics API"]
+    F --> G["metrics-server"]
+    G --> H["kubelet"]
 ```
 
-Different evidence types support a diagnosis only when they are connected to the same symptom and time.
+The first three branches read objects stored in the API server, and the fourth branch is the only one that reaches the kubelet through metrics-server.
 
-You can now select an observation by the question it answers. Correct scope, permissions and timing remain necessary before interpreting any command result as evidence of the application cause.
+## Narrow the output on purpose
+
+Unfiltered output hides the one line you need. Two options keep the output small. A namespace flag (`-n starfleet`) limits a query to one namespace, and a label selector (`-l app=probe`) limits it to Pods that carry that label. A selector only matches labels. It does not prove that a Deployment owns those Pods, because ownership is recorded in `metadata.ownerReferences`.
+
+The `shuttle` Pod in `starfleet` and the `drifter` Pod in `outpost` are different objects even if their names were the same. Always name the namespace when you compare a result with a task statement.
+
+A third habit is to read the whole object once with `-o yaml` before you extract single fields. The full representation shows `spec`, `status` and `metadata` together, so you notice fields you did not think to query, such as an `ownerReferences` entry or a `deletionTimestamp`.
+
+## Choose the next layer
+
+Pick the next command from the state you see. A Pod in `Pending` has not been scheduled, so scheduling events matter and logs do not exist yet. A Pod in `CrashLoopBackOff` has started and stopped, so the last termination reason and `kubectl logs --previous` matter. A Pod that is `Running` but unreachable points to readiness, Service endpoints and ports. A Pod whose usage climbs toward its limit points to the sizing evidence from `kubectl top`.
+
+A timing rule applies to metrics. The numbers are an average over a short window and they lag reality by a scrape interval. A short peak that ended before the last scrape does not appear. Use `kubectl top` to confirm a trend and use termination state to confirm an event that already happened.
+
+You now know which command reads which source, and you can tell a request, a limit and a measurement apart. The open question is what happens when the measurement source itself is broken, because then `kubectl top` fails while the application runs normally.
 
 ## Common pitfalls
 
 > [!WARNING]
-> Correctly formatted output from the wrong context is still the wrong evidence. Distinguish desired state, observed status, temporary events and measured usage, and check permissions before interpreting a missing observation.
+> Output from the wrong context is still the wrong evidence, so check the context first. A `Forbidden` error is not a missing object. `kubectl top` shows a short-window measurement, not the request and not the limit, and it cannot show a peak that ended before the last scrape.

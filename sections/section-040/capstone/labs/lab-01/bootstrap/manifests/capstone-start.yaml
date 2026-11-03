@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+# Evidence: restarts with a nonzero exit code.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crash-report
+  namespace: starfleet
+spec:
+  restartPolicy: Always
+  containers:
+  - name: report
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "report: boot sequence started"; sleep 2; exit 23'
+---
+# Evidence: two containers, only worker logs an error code.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  containers:
+  - name: api
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'while true; do echo "api: request served"; sleep 5; done'
+  - name: worker
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "worker: started"; echo "worker: ERROR code=E-6118 queue unreachable" >&2; sleep 3600'
+---
+# Evidence on the worker node: its container log file is under /var/log/pods.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: beacon-logger
+  namespace: starfleet
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: astro-ats-023-capstone-040-worker
+  containers:
+  - name: logger
+    image: docker.io/library/busybox:1.37.0
+    command:
+    - sh
+    - -c
+    - 'echo "beacon: capstone marker"; sleep 3600'
+---
+# Fault 1: the init container refuses to finish while MODE is not "ready".
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shuttle
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shuttle
+  template:
+    metadata:
+      labels:
+        app: shuttle
+    spec:
+      initContainers:
+      - name: fetch-config
+        image: docker.io/library/busybox:1.37.0
+        env:
+        - name: MODE
+          value: draft
+        command:
+        - sh
+        - -c
+        - 'echo "fetch-config: mode=$MODE"; if [ "$MODE" != "ready" ]; then echo "fetch-config: ERROR mode must be ready" >&2; exit 1; fi; echo "fetch-config: ok"'
+      containers:
+      - name: main
+        image: docker.io/library/busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - 'echo "main: running"; sleep 3600'
+---
+# Fault 2: the image tag does not exist, so the kubelet cannot pull it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relay
+  namespace: outpost
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: relay
+  template:
+    metadata:
+      labels:
+        app: relay
+    spec:
+      containers:
+      - name: relay
+        image: busybox:1.37.99
+        command:
+        - sh
+        - -c
+        - 'sleep 3600'

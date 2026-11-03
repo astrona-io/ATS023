@@ -1,0 +1,61 @@
+# Repair A Pending Deployment (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-023-lab-010-02-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    preloadImages:
+    - docker.io/library/busybox:1.37.0
+    nodes:
+      workers: 1
+# Starting state: the worker is labelled pool=survey and tainted
+# dedicated=survey:NoSchedule. The scout Deployment has a wrong nodeSelector,
+# no toleration and a CPU request no node can satisfy.
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Label and taint the worker and create the Pending scout Deployment
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: worker-rules-kept
+    description: The worker keeps its pool label and its dedicated taint and stays schedulable
+    type: file
+    source: validation/validate-worker-rules-kept.sh
+    hint: Do not remove the taint or the label and do not cordon the worker. Change the scout Deployment instead.
+  - name: selector-matches-worker
+    description: The scout nodeSelector is set and every pair matches a label of the worker
+    type: file
+    source: validation/validate-selector-matches-worker.sh
+    hint: Compare the nodeSelector in the Deployment with the output of kubectl get nodes --show-labels. Keep a selector, but correct the value.
+  - name: toleration-matches-taint
+    description: The scout Pod template tolerates the dedicated=survey:NoSchedule taint
+    type: file
+    source: validation/validate-toleration-matches-taint.sh
+    hint: Add a toleration with key dedicated, operator Equal, value survey and effect NoSchedule. A toleration without a key does not count.
+  - name: request-fits-worker
+    description: The scout CPU request is set and fits the worker allocatable CPU
+    type: file
+    source: validation/validate-request-fits-worker.sh
+    hint: Read the Insufficient cpu event, then lower the CPU request to a small value such as 100m. Keep a request.
+  - name: scout-running-on-worker
+    description: Both scout replicas are Running and Ready on the worker
+    type: file
+    source: validation/validate-scout-running-on-worker.sh
+    hint: Wait for the rollout, then run kubectl -n starfleet get pods -o wide. Do not scale the Deployment down or delete it.
+teardown:
+  keepCluster: false

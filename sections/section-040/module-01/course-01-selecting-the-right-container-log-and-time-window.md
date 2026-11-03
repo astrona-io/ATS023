@@ -15,11 +15,17 @@ During a rollout, two `probe` replicas can emit messages from different versions
 
 ## Before you start
 
-This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. The playground for this module runs the `probe` Deployment with two replicas in `starfleet`, the `shuttle` client Pod and the `crash-report` Pod. The commands in this chapter run against that playground.
 
 ## Responsible components and behavior
 
 Container logs provide text emitted by a container process through the supported logging path. They can describe application events and errors, but they do not automatically include every file the process writes. Useful diagnosis depends on selecting the correct Pod, container, instance and time window before interpreting the text.
+
+## How The Log Request Reaches The Container
+
+`kubectl logs` does not read files on your machine. It sends a request to the API server, which forwards it to the kubelet on the node that runs the Pod. The kubelet reads the log file that the container runtime wrote for that container and streams the content back. The API server needs permission to reach the kubelet, and you need the `get` verb on the `pods/log` subresource.
+
+This path explains several behaviors. If the node is down or the kubelet is not reachable, `kubectl logs` fails even though the Pod object still exists. If the kubelet has rotated the log file, only the newest file is returned. If the container never started, there is no file, and the command reports that the container is waiting to start.
 
 ## Understand What The Logging Path Captures
 
@@ -44,6 +50,38 @@ Tail limits and time filters can reduce unrelated output. Timestamps help align 
 A follow operation waits for additional records from the selected stream. Silence can mean that the application has nothing to emit, that it logs elsewhere or that selection is wrong. It does not prove that the process is healthy. Conversely, a warning message does not always mean the request failed; connect it to the relevant request outcome.
 
 Labels can select several Pods, but each record needs enough identity to attribute it to a replica and version. During a rollout, old and new Pods can coexist. Combining their logs without identifying the version can make a corrected error appear to continue in the new release.
+
+## Read The Streams In The Playground
+
+Every request that reaches a `probe` replica is written by the Python web server to its standard error stream. That is a good first example, because it shows that the runtime captures standard error as well as standard output. The `shuttle` Pod acts as the client. First send two requests from `shuttle` to the `probe` Service, then read what one replica recorded.
+
+<!-- astrona:playground:renew -->
+
+```sh
+kubectl -n starfleet exec shuttle -- wget -qO- http://probe/health
+kubectl -n starfleet exec shuttle -- wget -qO- http://probe/health
+kubectl -n starfleet logs deploy/probe --tail=5 --timestamps
+```
+
+The Service sends each request to one of the two replicas, so the two requests may have gone to different Pods. The `deploy/probe` form asks kubectl to pick one Pod of the Deployment and read its log. kubectl prints a short notice on standard error that it found more than one Pod and used one of them. You may see only one request line, or both, depending on where the Service sent them. This is why a Deployment shortcut is not enough evidence for a rollout question.
+
+To see every replica with its identity, select the Pods by label and ask kubectl to prefix each line with its source:
+
+```sh
+kubectl -n starfleet logs -l app=probe --prefix --tail=5 --timestamps
+```
+
+With `-l` the default for `--tail` is 10 lines per Pod when you do not set it, and kubectl opens at most five log requests at the same time unless you raise `--max-log-requests`. The `--prefix` flag adds `[pod/<name>/<container>]` to each line, so the reader can attribute every record to a replica and container. Without it, lines from two replicas blend into one stream that cannot be traced back.
+
+Now compare the current and previous instances of a restarting container. The `crash-report` Pod prints one marker, sleeps two seconds and exits with status 12, and Kubernetes restarts it:
+
+```sh
+kubectl -n starfleet logs crash-report -c report --previous --timestamps
+kubectl -n starfleet logs crash-report -c report --since=30s --timestamps
+kubectl -n starfleet get pod crash-report -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}{"\n"}'
+```
+
+The first command reads the instance that ended before the current one. The second limits the current stream to the last 30 seconds. The third prints the exit code of the last terminated instance, which is 12. The log tells you what the process said. The termination record tells you how the runtime saw it end.
 
 ## Protect Data And Draw Limited Conclusions
 

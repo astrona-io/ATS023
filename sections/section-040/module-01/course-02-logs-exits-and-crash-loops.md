@@ -15,7 +15,7 @@ A container exits because it cannot read required configuration. Kubernetes retr
 
 ## Before you start
 
-This chapter is standalone reading material; no running cluster or installed tools are required. A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. Treat the worked configurations as teaching examples rather than recorded observations from a provisioned environment.
+A Pod is the Kubernetes unit for running one or more containers, and a namespace groups namespaced objects. The playground for this module runs the `crash-report` Pod in `starfleet`. Its container `report` prints one line and exits with status 12 every few seconds, so it always has a restart count and a previous instance to read.
 
 ## Responsible components and behavior
 
@@ -46,6 +46,35 @@ A useful hypothesis states which input or condition caused the failure and what 
 Changing the image, credentials, memory and probe at once can make the application run without identifying which change mattered. It can also conceal a new weakness, such as disabled health checks or excessive permissions. Prefer a focused correction supported by evidence and verify the expected transition.
 
 Keep the diagnostic record safe to share. Replace sensitive values with descriptions of their role, retain useful timestamps and include the relevant process or container identity. A strong explanation can demonstrate a configuration fault without copying production credentials into a public issue.
+
+## Read The Restart Evidence
+
+The container status of a Pod keeps three facts apart: the current state, the last terminated state and the restart count. Read all three for `crash-report` and compare them with the two log streams.
+
+<!-- astrona:playground:renew -->
+
+```sh
+kubectl -n starfleet get pod crash-report
+kubectl -n starfleet get pod crash-report -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}'
+kubectl -n starfleet get pod crash-report -o jsonpath='{.status.containerStatuses[0].lastState.terminated}{"\n"}'
+```
+
+The first command shows the Pod status column, which is `CrashLoopBackOff` between attempts and `Error` or `Running` for a short time around each attempt. The second prints the number of restarts so far. The third prints the last terminated state as JSON. It contains the fields `exitCode`, `reason`, `startedAt` and `finishedAt`. The exit code is 12 and the reason is `Error`, which means the process ended by itself with a nonzero status.
+
+Next read the events for the Pod and the previous log:
+
+```sh
+kubectl -n starfleet describe pod crash-report
+kubectl -n starfleet logs crash-report -c report --previous
+```
+
+In the `describe` output, the Last State block repeats the termination record and the Events section shows the back-off message from the kubelet. The previous log shows the single marker line `application-started`. Together they give a full timeline: the process started, wrote its marker, exited with 12, and the kubelet delayed the next start.
+
+## How Kubernetes Decides To Restart
+
+The pod field `restartPolicy` controls what the kubelet does after a container exits. `Always` restarts it every time, `OnFailure` restarts it only after a nonzero exit, and `Never` leaves it terminated. The `crash-report` Pod uses `Always`, so even a process that exits with status 0 would be restarted.
+
+After each failed start the kubelet doubles the delay, starting at 10 seconds and capping at 5 minutes, and it resets the delay after the container has run for 10 minutes without failing. This is why a crash loop looks slower over time. The kubelet, not the application, creates this delay, and the `CrashLoopBackOff` status describes the waiting period only.
 
 ## Work through the decision
 
