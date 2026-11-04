@@ -54,7 +54,7 @@ sections:
       after_reading: sections/section-010/module-01/course-02-node-health-and-shared-dependencies.md
       objective: Trace a worker readiness failure to its stopped kubelet service and
         restore it.
-      status: draft
+      status: alpha
       runtime_verification: pending
     practice_readings:
     - sections/section-010/module-01/course-03-guided-practice.md
@@ -89,7 +89,7 @@ sections:
       after_reading: sections/section-020/module-01/course-02-locating-a-control-plane-component-failure.md
       objective: Repair an invalid controller-manager flag and verify that Deployment
         reconciliation resumes.
-      status: draft
+      status: alpha
       runtime_verification: pending
     practice_readings:
     - sections/section-020/module-01/course-03-guided-practice.md
@@ -123,7 +123,7 @@ sections:
       path: sections/section-030/module-01/labs/lab-01
       after_reading: sections/section-030/module-01/course-01-choosing-diagnostic-evidence-with-kubectl.md
       objective: Combine ready workload state with a recent metrics API measurement.
-      status: draft
+      status: alpha
       runtime_verification: pending
     practice_readings:
     - sections/section-030/module-01/course-03-guided-practice.md
@@ -158,7 +158,7 @@ sections:
       after_reading: sections/section-040/module-01/course-02-logs-exits-and-crash-loops.md
       objective: Select the previous container log and record the corresponding exit
         evidence.
-      status: draft
+      status: alpha
       runtime_verification: pending
     practice_readings:
     - sections/section-040/module-01/course-03-guided-practice.md
@@ -193,14 +193,14 @@ sections:
       after_reading: sections/section-050/module-01/course-01-tracing-a-service-request.md
       objective: Restore backend selection while preserving the existing client and
         listener ports.
-      status: draft
+      status: alpha
       runtime_verification: pending
     - id: lab-02
       path: sections/section-050/module-01/labs/lab-02
       after_reading: sections/section-050/module-01/course-02-tracing-an-external-request-to-the-application.md
       objective: Trace a failed external route to a nonexistent backend reference
         and repair it.
-      status: draft
+      status: alpha
       runtime_verification: pending
     practice_readings:
     - sections/section-050/module-01/course-03-guided-practice.md
