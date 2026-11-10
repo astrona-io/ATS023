@@ -93,7 +93,7 @@ modules:
     difficulty: intermediate
     estimated_duration: 25m
     topic: scheduling-failures
-    task_kind: troubleshoot
+    task_kind: troubleshooting
     learning_goals:
     - Read a FailedScheduling event and name each rule that rejected the node.
     - Correct a node selector, add a toleration and lower a resource request without
@@ -131,7 +131,7 @@ modules:
     difficulty: intermediate
     estimated_duration: 25m
     topic: workload-failures
-    task_kind: troubleshoot
+    task_kind: troubleshooting
     learning_goals:
     - Read Pod events to find a bad image tag and a missing ConfigMap reference.
     - Repair the Deployment while keeping the existing ConfigMap unchanged.
@@ -159,7 +159,7 @@ modules:
     difficulty: advanced
     estimated_duration: 45m
     topic: cluster-troubleshooting
-    task_kind: troubleshoot
+    task_kind: troubleshooting
     learning_goals:
     - Find and repair a stopped kubelet, a Pod that cannot be placed and a failing
       Deployment in one cluster.
@@ -398,7 +398,7 @@ modules:
     difficulty: intermediate
     estimated_duration: 20m
     topic: metrics-server
-    task_kind: repair
+    task_kind: troubleshooting
     tags:
     - cka
     - metrics-server
@@ -438,7 +438,7 @@ modules:
     difficulty: advanced
     estimated_duration: 25m
     topic: resource-limits
-    task_kind: repair
+    task_kind: troubleshooting
     tags:
     - cka
     - oomkilled
@@ -468,7 +468,7 @@ modules:
     difficulty: advanced
     estimated_duration: 30m
     topic: resource-monitoring
-    task_kind: repair
+    task_kind: troubleshooting
     tags:
     - cka
     - metrics-server
