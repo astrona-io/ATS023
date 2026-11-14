@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://astrona.io/courses/certified-kubernetes-administrator-cka">
+    <img src="https://astrona.io/courses/certified-kubernetes-administrator-cka/domains/ATS023.svg" alt="ATS023: Troubleshooting, part of the Certified Kubernetes Administrator course on Astrona" width="100%">
+  </a>
+</p>
+
 # Troubleshooting (ATS023)
 
 Certified Kubernetes Administrator (CKA): Troubleshooting, worth 30% of the official curriculum. This course belongs to ATP005.
